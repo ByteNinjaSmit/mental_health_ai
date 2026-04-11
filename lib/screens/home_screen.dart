@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'chat_screen.dart';
-import 'test_screen.dart';
+import 'tests/test_hub_screen.dart';
 import 'appointment_screen.dart';
 import 'forum/forum_landing_page.dart';
 import 'profile_screen.dart';
@@ -144,7 +144,7 @@ class HomeScreen extends StatelessWidget {
                 childAspectRatio: 0.85,
                 children: [
                   _buildCard(context, "AI Chatbot", "Talk to our AI therapist", Icons.chat_bubble_outline_rounded, ChatScreen(), 0),
-                  _buildCard(context, "Tests", "Assess your mental health", Icons.assignment_outlined, TestScreen(), 1),
+                  _buildCard(context, "Assessment", "Check your mental health", Icons.assignment_outlined, const TestHubScreen(), 1),
                    _buildCard(context, "Community", "Connect with others", Icons.people_outline_rounded, ForumLandingPage(), 2),
                   _buildCard(context, "Bookings", "Consult a specialist", Icons.calendar_today_rounded, AppointmentScreen(), 3),
                   _buildCard(context, "Helplines", "Immediate support now", Icons.support_agent_rounded, const HelplineScreen(), 4),

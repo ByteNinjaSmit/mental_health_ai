@@ -35,6 +35,19 @@ class FirestoreService {
     });
   }
 
+  // Get appointments stream
+  Stream<QuerySnapshot> getAppointments() {
+    return _db
+        .collection('appointments')
+        .where('userId', isEqualTo: currentUserId)
+        .snapshots();
+  }
+
+  // Cancel appointment
+  Future<void> cancelAppointment(String docId) async {
+    await _db.collection('appointments').doc(docId).delete();
+  }
+
   // Log emergency/therapy call
   Future<void> logCall(String type) async {
     if (currentUserId == null) return;
@@ -55,5 +68,24 @@ class FirestoreService {
       'read': false,
       'timestamp': Timestamp.now(),
     });
+  }
+
+  // Save assessment results for trends
+  Future<void> saveAssessmentResult(String type, Map<String, dynamic> result) async {
+    if (currentUserId == null) return;
+    await _db.collection('assessments').add({
+      'type': type,
+      'result': result,
+      'userId': currentUserId,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Get assessment history stream
+  Stream<QuerySnapshot> getAssessmentHistory() {
+    return _db
+        .collection('assessments')
+        .where('userId', isEqualTo: currentUserId)
+        .snapshots();
   }
 }

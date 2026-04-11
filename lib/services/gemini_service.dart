@@ -57,4 +57,45 @@ class GeminiService {
       return "I'm having a momentary connection issue ($e). I'm still here for you—let's keep talking in a moment.";
     }
   }
+
+  Future<String> analyzeTrend(List<Map<String, dynamic>> history) async {
+    if (apiKey == "YOUR_GEMINI_API_KEY" || apiKey.isEmpty) {
+      return "Config Error: Please provide a valid Gemini API Key.";
+    }
+
+    final String historyText = history.map((e) {
+      return "[${e['timestamp']}] ${e['type']}: ${e['result']}";
+    }).join("\n");
+
+    final url =
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey";
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "contents": [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "text":
+                      "SYSTEM: You are a Mental Health Trend Analyst. Analyze the following user assessment history and provide a compassionate, insightful 2-sentence summary. Identify any patterns (e.g., recurring moods, anxiety trends) and offer one gentle, personalized piece of advice. Do NOT provide medical diagnoses.\n\nHISTORY:\n$historyText"
+                }
+              ]
+            }
+          ],
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['candidates'][0]['content']['parts'][0]['text'];
+      }
+      return "I need a bit more data to see a pattern. Keep checking in with me!";
+    } catch (e) {
+      return "I'm having trouble seeing the patterns right now, but every check-in you do helps me understand you better.";
+    }
+  }
 }
