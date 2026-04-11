@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "736373946179",
+    "project_id": "ai-powered-mental-health-compa",
+    "storage_bucket": "ai-powered-mental-health-compa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:736373946179:android:1c4cf4a027f3d53f9161f6",
+        "android_client_info": {
+          "package_name": "com.example.mental_health_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2RPoy9kJIc1nRyBcwP8GAmQAZVJtmggE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

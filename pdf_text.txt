@@ -1,0 +1,4354 @@
+import 'package:firebase_auth/firebase_auth.dart' ; 
+import 'package:cloud_firestore/cloud_firestore.dart' ; 
+import 'package:flutter/material.dart' ; 
+import '../welcome_page.dart' ; 
+import '../doctor_home.dart' ; // Ensure this file is created for the doctor's 
+dashboard  
+ 
+class SignIn extends StatefulWidget  { 
+  const SignIn({Key? key}) : super(key: key); 
+ 
+  @override  
+  State<SignIn> createState () => _SignInState (); 
+} 
+ 
+class _SignInState  extends State<SignIn> { 
+  String email = "", password = ""; 
+  final TextEditingController  emailController = TextEditingController (); 
+  final TextEditingController  passwordController = TextEditingController (); 
+ 
+  Future<void> signIn() async { 
+    if (email.isNotEmpty && password.is NotEmpty) {  
+      try { 
+        // Attempt to sign in with Firebase Authentication  
+        UserCredential  userCredential = await FirebaseAuth .instance  
+            .signInWithEmailAndPassword (email: email, password : password);  
+ 
+        // Get the user's Fi restore document by UID  
+        DocumentSnapshot  userDoc = await FirebaseFirestore .instance  
+            .collection ('users') 
+            .doc(userCredential.user !.uid) 
+            .get(); 
+ 
+        if (userDoc.exists) {  
+          String role = userDoc[ 'role']; // Ensure `role` exists in the document  
+          String userName = userDoc[ 'name']; 
+ 
+          ScaffoldMessenger .of(context). showSnackBar (SnackBar ( 
+            backgroundColor : Colors.green, 
+            content: Text( 
+              "Login Succes sful", 
+              style: TextStyle (fontSize : 20.0), 
+            ), 
+          )); 
+ 
+          if (role == 'doctor' ) { 
+            // Navigate to DoctorHomePage  
+            Navigator .pushReplacement ( 
+              context,  
+              MaterialPageRoute ( 
+                builder: (context) => DoctorHomePage (), 
+              ), 
+            ); 
+          } else { 
+            // Navigate to WelcomePage for regular users  
+            Navigator .pushReplacement ( 
+              context,  
+              MaterialPageRou te( 
+                builder: (context) => WelcomePage (), 
+              ), 
+            ); 
+          } 
+        } else { 
+          // No user document found in Firestore  
+          ScaffoldMessenger .of(context). showSnackBar (SnackBar ( 
+            backgroundColor : Colors.redAccent,  
+            content: Text( 
+              "User data not found in the database" , 
+              style: TextStyle (fontSize : 20.0), 
+            ), 
+          )); 
+        } 
+      } on FirebaseAuthException  catch (e) { 
+        // Handle Firebase Authentication errors  
+        String errorMsg;  
+        if (e.code == 'user-not-found') { 
+          errorMsg = "Email not registered" ; 
+        } else if (e.code == 'wrong-password' ) { 
+          errorMsg = "Invalid password" ; 
+        } else { 
+          errorMsg = "Login failed. Please try again" ; 
+        } 
+        ScaffoldMessenger .of(context). showSnackBar (SnackBar ( 
+          backgroundColor : Colors.redAccent,  
+          content: Text( 
+            errorMsg,  
+            style: TextStyle (fontSize : 20.0), 
+          ), 
+        )); 
+      } 
+    } else { 
+      ScaffoldMessenger .of(context). showSnackBar (SnackBar ( 
+        backgroundColor : Colors.red, 
+        content: Text( 
+          "Please enter email and password" , 
+          style: TextStyle (fontSize: 20.0), 
+        ), 
+      )); 
+    } 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      body: Container ( 
+        child: Column( 
+          children : [ 
+            Image.asset("images/account.png" ), 
+            Expanded ( 
+              child: Container ( 
+                padding: EdgeInsets .symmetric (horizontal : 30.0), 
+                width: MediaQuery .of(context).size.width,  
+                decoration : BoxDecoration ( 
+                  gradient : LinearGradient ( 
+                    colors: [ 
+                      Color(0xFF498aa2 ), 
+                      Color(0xFF377b94 ), 
+                      Color(0xFF81b7cf ), 
+                      Color(0xFF81b7cf ), 
+                    ], 
+                    begin: Alignment .topLeft, 
+                    end: Alignment .bottomRight,  
+                  ), 
+                ), 
+                child: Column( 
+                  children : [ 
+                    SizedBox (height: 30.0), 
+                    TextField ( 
+                      controller : emailController,  
+                      decoration : InputDecoration ( 
+                        hintText : "Email", 
+                        hintStyle : TextStyle ( 
+                          color: Colors.white, 
+                          fontSize : 20.0, 
+                          fontWeight : FontWeight .bold, 
+                        ), 
+                        enabledBorder : UnderlineInputBorder ( 
+                          borderSide : BorderSide (color: Colors.white, width : 
+1.5), 
+                        ), 
+                      ), 
+                      style: TextStyle (color: Colors.white, fontWeight : 
+FontWeight .bold), 
+                    ), 
+                    SizedBox (height: 30.0), 
+                    TextField ( 
+                      controller : passwordController,  
+                      decoration : InputDecoration ( 
+                        hintText : "Password" , 
+                        hintStyle : TextStyle ( 
+                          color: Colors.white, 
+                          fontSize : 20.0, 
+                          fontWeight : FontWeight .bold, 
+                        ), 
+                        enabledBorder : UnderlineInputBorder ( 
+                          borderSide : BorderSide (color: Colors.white, width : 
+1.5), 
+                        ), 
+                      ), 
+                      obscureText : true, 
+                      style: TextStyle (color: Colors.white, fontWeight : 
+FontWeight .bold), 
+                    ), 
+                    SizedBox (height: 40.0), 
+                    Padding( 
+                      padding: const EdgeInsets .symmetric (horizontal : 10.0), 
+                      child: Row( 
+                        mainAxisAlignment : MainAxisAlignment .spaceBetween,  
+                        children : [ 
+                          Text( 
+                            "Sign In" , 
+                            style: TextStyle ( 
+                              color: Colors.white, 
+                              fontSize : 25.0, 
+                              fontWeight : FontWeight .bold, 
+                            ), 
+                          ), 
+                          GestureDetector ( 
+                            onTap: () { 
+                              setState (() { 
+                                email = emailController.text;  
+                                password = passwordController.text;  
+                              }); 
+                              signIn(); 
+                            }, 
+                            child: Material ( 
+                              elevation : 5.0, 
+                              borderRadius : BorderRadius .circular (60), 
+                              child: Container ( 
+                                padding: EdgeInsets .all(20), 
+                                decoration : BoxDecoration ( 
+                                  color: Color(0xFF4C7296 ), 
+                                  borderRadius : BorderRadius .circular (60), 
+                                ), 
+                                child: Icon( 
+                                  Icons.arrow_forward,  
+                                  color: Colors.white, 
+                                  size: 30.0, 
+                                ), 
+                              ), 
+                            ), 
+                          ), 
+                        ], 
+                      ), 
+                    ), 
+                  ], 
+                ), 
+              ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+import 'package:firebase_auth/firebase_auth.dart' ; 
+import 'package:cloud_firestore/cloud_firestore.dart' ; 
+import '../welcome_page.dart' ; 
+import 'login.dart' ; 
+import 'package:flutter/material.dart' ; 
+ 
+class SignUp extends StatefulWidget  { 
+  const SignUp({super.key}); 
+ 
+  @override  
+  State<SignUp> createState () => _SignUpState (); 
+} 
+ 
+class _SignUpState  extends State<SignUp> { 
+  String email = "", password = "", name = "", age = ""; 
+  final TextEditingController  nameController = TextEditingController (); 
+  final TextEditingController  mailController = TextEditingController (); 
+  final TextEditingController  passwordControl ler = TextEditingController (); 
+  final TextEditingController  ageController = TextEditingController (); 
+ 
+  Future<void> registration () async { 
+    if (password.isNotEmpty && email.isNotEmpty && name.isNotEmpty && 
+age.isNotEmpty) {  
+      try { 
+        // Attempt to create a new user with Firebase Authentication  
+        UserCredential  userCredential = await FirebaseAuth .instance  
+            .createUserWithEmailAndPassword (email: email, password : password);  
+ 
+        // Check if user is created  
+        if (userCredential.user != null) { 
+          print("User created successfully: ${userCredential .user!.uid}"); 
+ 
+          // Save user data to Firestore after successful registration  
+          await FirebaseFirestore .instance  
+              .collection ('users') 
+              .doc(userCredential.user !.uid) 
+              .set({ 
+            'name': name, 
+            'email': email, 
+            'age': age, 
+            'uid': userCredential.user !.uid, 
+          }); 
+          print("User data added to Firestore" ); 
+ 
+          ScaffoldMessenger .of(context). showSnackBar (SnackBar ( 
+            backgroundColor : Colors.green, 
+            content: Text( 
+              "Registered Successfully" , 
+              style: TextStyle (fontSize : 20.0), 
+            ), 
+          )); 
+ 
+          Navigator .pushReplacement ( 
+            context,  
+            MaterialPageRoute (builder : (context) => WelcomePage ()), 
+          ); 
+        } else { 
+          print("User creation failed" ); 
+        } 
+      } on FirebaseAuthException  catch (e) { 
+        if (e.code == 'weak-password' ) { 
+          ScaffoldMessenger .of(context). showSnackBar (SnackBar ( 
+            backgroundColor : Colors.orangeAccent,  
+            content: Text( 
+              "Password provided is too weak" , 
+              style: TextStyle (fontSize : 20.0), 
+            ), 
+          )); 
+        } else if (e.code == "email-already-in-use") { 
+          ScaffoldMessenger .of(context). showSnackBar (SnackBar ( 
+            backgroundColor : Colors.redAccent,  
+            content: Text( 
+              "An account with this email already exists" , 
+              style: TextStyle (fontSize : 20.0), 
+            ), 
+          )); 
+        } 
+      } 
+    } else { 
+      ScaffoldMessenger .of(context). showSnackBar (SnackBar ( 
+        backgroundColor : Colors.red, 
+        content: Text( 
+          "Please fill all fields" , 
+          style: TextStyle (fontSize : 20.0), 
+        ), 
+      )); 
+    } 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      body: Container ( 
+        child: Column( 
+          children : [ 
+            Image.asset("images/account.png" ), 
+            Expanded ( 
+              child: Container ( 
+                padding: EdgeInsets .symmetric (horizontal : 30.0), 
+                width: MediaQuery .of(context).size.width,  
+                decoration : BoxDecoration ( 
+                  gradient : LinearGradient ( 
+                    colors: [ 
+                      Color(0xFF498aa2 ), 
+                      Color(0xFF377b94 ), 
+                      Color(0xFF81b7cf ), 
+                      Color(0xFF81b7cf ), 
+                    ], 
+                    begin: Alignment .topLeft,  
+                    end: Alignment .bottomRight,  
+                  ), 
+                ), 
+                child: Column( 
+                  children : [ 
+                    SizedBox (height: 30.0), 
+                    TextField ( 
+                      controller : nameController,  
+                      decoration : InputDecoration ( 
+                        hintText : "Name", 
+                        hintStyle : TextStyle ( 
+                          color: Colors.white, 
+                          fontSize : 20.0, 
+                          fontWeight : FontWeight .bold, 
+                        ), 
+                        enabledBorder : UnderlineInputBorder ( 
+                          borderSide : BorderSide (color: Colors.white, width : 
+1.5), 
+                        ), 
+                      ), 
+                      style: TextStyle (color: Colors.white, fontWeight : 
+FontWeight .bold), 
+                    ), 
+                    SizedBox (height: 30.0), 
+                    TextField ( 
+                      controller : mailController,  
+                      decoration : InputDecoration ( 
+                        hintText : "Email", 
+                        hintStyle : TextStyle ( 
+                          color: Colors.white, 
+                          fontSize : 20.0, 
+                          fontWeight : FontWeight .bold, 
+                        ), 
+                        enabledBorder : UnderlineInputBorder ( 
+                          borderSide : BorderSide (color: Colors.white, width : 
+1.5), 
+                        ), 
+                      ), 
+                      style: TextStyle (color: Colors.white, fontWeight : 
+FontWeight .bold), 
+                    ), 
+                    SizedBox (height: 30.0), 
+                    TextField ( 
+                      controller : passwordController,  
+                      decoration : InputDecoration ( 
+                        hintText : "Password" , 
+                        hintStyle : TextStyle ( 
+                          color: Colors.white, 
+                          fontSize : 20.0, 
+                          fontWeight : FontWeight .bold, 
+                        ), 
+                        enabledBorder : UnderlineInputBorder ( 
+                          borderSide : BorderSide (color: Colors.white, width : 
+1.5), 
+                        ), 
+                      ), 
+                      obscureText : true, 
+                      style: TextStyle (color: Colors.white, fontWeight : 
+FontWeight .bold), 
+                    ), 
+                    SizedBox (height: 30.0), 
+                    TextField ( 
+                      controller : ageController,  
+                      decoration : InputDecoration ( 
+                        hintText : "Age", 
+                        hintStyle : TextStyle ( 
+                          color: Colors.white, 
+                          fontSize : 20.0, 
+                          fontWeight : FontWeight .bold, 
+                        ), 
+                        enabledBorder : UnderlineInputBorder ( 
+                          borderSide : BorderSide (color: Colors.white, width : 
+1.5), 
+                        ), 
+                      ), 
+                      style: TextStyle (color: Colors.white, fontWeight : 
+FontWeight .bold), 
+                    ), 
+                    SizedBox(height: 40.0), 
+                    Padding( 
+                      padding: const EdgeInsets .symmetric (horizontal : 10.0), 
+                      child: Row( 
+                        mainAxisAlignment : MainAxisAlignment .spaceBetween,  
+                        children : [ 
+                          Text( 
+                            "Sign Up" , 
+                            style: TextStyle ( 
+                              color: Colors.white, 
+                              fontSize : 25.0, 
+                              fontWeight : FontWeight .bold, 
+                            ), 
+                          ), 
+                          GestureDetector ( 
+                            onTap: () { 
+                              setState (() { 
+                                email = mailController.text;  
+                                name = nameController.text;  
+                                password = passwordController.text;  
+                                age = ageController.text;  
+                              }); 
+                              registration (); 
+                            }, 
+                            child: Material ( 
+                              elevation : 5.0, 
+                              borderRadius : BorderRadius .circular (60), 
+                              child: Container ( 
+                                padding: EdgeInsets .all(20), 
+                                decoration : BoxDecoration ( 
+                                  color: Color(0xFF4C7296 ), 
+                                  borderRadius : BorderRadius .circular (60), 
+                                ), 
+                                child: Icon( 
+                                  Icons.arrow_forward,  
+                                  color: Colors.white, 
+                                  size: 30.0, 
+                                ), 
+                              ), 
+                            ), 
+                          ), 
+                        ], 
+                      ), 
+                    ), 
+                    SizedBox (height: 50.0), 
+                    Row( 
+                      mainAxisAlignment : MainAxisAlignment .center,  
+                      children : [ 
+                        Text( 
+                          "Already have an account? " , 
+                          style: TextStyle ( 
+                            color: Colors.white, 
+                            fontSize : 18.0, 
+                            fontWeight : FontWeight .w500, 
+                          ), 
+                        ), 
+                        GestureDetector ( 
+                          onTap: () { 
+                            Navigator .push( 
+                              context,  
+                              MaterialPageRoute (builder : (context) => SignIn()), 
+                            ); 
+                          }, 
+                          child: Text( 
+                            "Sign In" , 
+                            style: TextStyle ( 
+                              color: Colors.white, 
+                              fontSize : 20.0, 
+                              fontWeight : FontWeight .bold, 
+                            ), 
+                          ), 
+                        ), 
+                      ], 
+                    ), 
+                  ], 
+                ), 
+              ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+import 'package:flutter/material.dart' ; 
+ 
+class BookAppointmentPage  extends StatelessWidget  { 
+  @override  
+  Widget build(BuildContext  context) {  
+    return DefaultTabController ( 
+      length: 2, 
+      child: Scaffold ( 
+        appBar: AppBar( 
+          title: Text("Appointments" ), 
+          backgroundColor : Colors.blueAccent,  
+          bottom: TabBar( 
+            tabs: [ 
+              Tab(text: "Book Appointment" ), 
+              Tab(text: "Scheduled Appointments" ), 
+            ], 
+          ), 
+        ), 
+        body: TabBarView ( 
+          children : [ 
+            // Book Appointment Section  
+            BookAppointmentSection (), 
+ 
+            // Scheduled Appointments Section  
+            ScheduledAppointmentsSection (), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+class BookAppointmentSection  extends StatelessWidget  { 
+  final Map<String, dynamic> doctorInfo = { 
+    'name': 'Dr Uday Bendale' , 
+    'title': 'Anand Psychiatry Clinic' , 
+    'address' : 'Beside Renuka Medical, Opp J.D.C.C Bank Head office, Ring Rd, 
+Jalgaon, Maharashtra 425001, India' , 
+    'image': 'assets/doctor.jpg' , // Image path in assets folder  
+    'city': 'Jalgaon' , 
+  }; 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Padding( 
+      padding: const EdgeInsets .all(16.0), 
+      child: Card( 
+        elevation : 4.0, 
+        shape: RoundedRectangleBorder (borderRadius : BorderRadius .circular (8)), 
+        child: Column( 
+          mainAxisSize : MainAxisSize .min, // Ensures the c ard size is minimal  
+          crossAxisAlignment : CrossAxisAlignment .start, 
+          children : [ 
+            // Doctor's Image  
+            ClipRRect ( 
+              borderRadius : BorderRadius .vertical (top: Radius.circular (8)), 
+              child: Image.asset( 
+                doctorInfo[ 'image'], 
+                height: 150, 
+                width: double.infinity,  
+                fit: BoxFit.cover, 
+              ), 
+            ), 
+            Padding( 
+              padding: const EdgeInsets .all(16.0), 
+              child: Column( 
+                crossAxisAlignment : CrossAxisAlignment .start, 
+                children : [ 
+                  Text( 
+                    doctorInfo[ 'name'], 
+                    style: TextStyle ( 
+                      fontSize : 20, 
+                      fontWeight : FontWeight .bold, 
+                      color: Colors.black87,  
+                    ), 
+                  ), 
+                  SizedBox (height: 8), 
+                  Text( 
+                    doctorInfo[ 'title'], 
+                    style: TextStyle (fontSize : 16, color: Colors.grey[600]), 
+                  ), 
+                  SizedBox (height: 8), 
+                  Text( 
+                    doctorInfo[ 'address' ], 
+                    style: TextStyle (fontSize : 14, color: Colors.grey[700]), 
+                  ), 
+                  SizedBox (height: 8), 
+                  Text( 
+                    'City: ${doctorInfo ['city']}', 
+                    style: TextStyle (fontSize : 14, color: Colors.grey[700]), 
+                  ), 
+                  SizedBox (height: 16), 
+                  // Aligning the button to minimize space below  
+                  Align( 
+                    alignment : Alignment .center,  
+                    child: ElevatedButton ( 
+                      onPressed : () { 
+                        // Navigate to Schedule Session Page  
+                        Navigator .push( 
+                          context,  
+                          MaterialPageRoute ( 
+                            builder: (context) => ScheduleSessionPage (), 
+                          ), 
+                        ); 
+                      }, 
+                      child: Text("Book Appointment" ), 
+                      style: ElevatedButton .styleFrom ( 
+                        backgroundColor : Colors.blueAccent,  
+                        padding: EdgeInsets .symmetric ( 
+                            horizontal : 32.0, vertical : 12.0), 
+                        textStyle : TextStyle (fontSize : 16), 
+                      ), 
+                    ), 
+                  ), 
+                ], 
+              ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+ 
+ 
+class ScheduledAppointmentsSection  extends StatelessWidget  { 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Center( 
+      child: Text( 
+        "No appointments s cheduled yet." , 
+        style: TextStyle ( 
+          fontSize : 16, 
+          color: Colors.grey[600], 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+class ScheduleSessionPage  extends StatelessWidget  { 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: Text("Schedule Session" ), 
+        backgroundColor : Colors.blueAccent,  
+      ), 
+      body: Center( 
+        child: Text( 
+          "Here you can schedule your session (to be implemented)." , 
+          style: TextStyle(fontSize : 16, color: Colors.grey[600]), 
+          textAlign : TextAlign .center,  
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+import 'package:flutter/material.dart' ; 
+import 'topics_page.dart' ; 
+ 
+class ForumLandingPage  extends StatelessWidget  { 
+  final List<String> categories = [ 
+    'Anxiety' , 
+    'Depression' , 
+    'PTSD', 
+    'OCD', 
+    'Stress' , 
+    'Bipolar' , 
+    'Miscellaneous'  
+  ]; 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: Text('Community Forum' ), 
+        backgroundColor : Colors.blueAccent,  
+      ), 
+      body: ListView .builder( 
+        itemCount : categories.length,  
+        itemBuilder : (context, index) {  
+          return Card( 
+            margin: EdgeInsets .symmetric (vertical : 8.0, horizontal : 16.0), 
+            child: ListTile ( 
+              title: Text( 
+                categories[index],  
+                style: TextStyle (fontSize : 18.0, fontWeight : FontWeight .w600), 
+              ), 
+              trailing : Icon(Icons.arrow_forward),  
+              onTap: () { 
+                Navigator .push( 
+                  context,  
+                  MaterialPageRoute ( 
+                    builder: (context) => 
+                        TopicsPage (categoryName : categories[index]),  
+                  ), 
+                ); 
+              }, 
+            ), 
+          ); 
+        }, 
+      ), 
+    ); 
+  }import 'package:cloud_firestore/cloud_firestore.dart' ; 
+import 'package:firebase_auth/firebase_auth.dart' ; 
+import 'package:flutter/material.da rt'; 
+ 
+class PostDetailsPage  extends StatefulWidget  { 
+  final String topicId;  
+  final String categoryName;  
+ 
+  PostDetailsPage ({required  this.topicId, required  this.categoryName});  
+ 
+  @override  
+  _PostDetailsPageState  createState () => _PostDetailsPageStat e(); 
+} 
+ 
+class _PostDetailsPageState  extends State<PostDetailsPage > { 
+  TextEditingController  commentController = TextEditingController (); 
+  TextEditingController  editCommentController = TextEditingController (); 
+  TextEditingController  editPostController = TextEditingController (); 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: Text('Post Details' ), 
+        backgroundColor : Colors.blueAccent,  
+      ), 
+      body: StreamBuilder <DocumentSnapshot >( 
+        stream: FirebaseFirestore .instance  
+            .collection ('topics' ) 
+            .doc(widget.topicId)  
+            .snapshots (), 
+        builder: (context, snapshot) {  
+          if (!snapshot.hasData) {  
+            return Center(child: CircularProgressIndicator ()); 
+          } 
+ 
+          var post = snapshot.data !.data() as Map<String, dynamic>; 
+ 
+          return Column( 
+            children : [ 
+              Expanded ( 
+                child: SingleChildScrollView ( 
+                  child: Padding( 
+                    padding: EdgeInsets .all(16.0), 
+                    child: Column( 
+                      crossAxisAlignment : CrossAxisAlignment .start, 
+                      children : [ 
+                        // Main Post  
+                        Card( 
+                          elevation : 4.0, 
+                          child: Padding( 
+                            padding: const EdgeInsets .all(16.0), 
+                            child: Column( 
+                              crossAxisAlignment : CrossAxisAlignment .start, 
+                              children : [ 
+                                FutureBuilder <DocumentSnapshot >( 
+                                  future: post['user'].get(), 
+                                  builder: (context, authorSnapsh ot) { 
+                                    if (!authorSnapshot.hasData) {  
+                                      return CircularProgressIndicator (); 
+                                    } 
+ 
+                                    var authorData = 
+                                    authorSnapshot.data !.data() as Map<String, 
+dynamic>; 
+                                    return Row( 
+                                      children : [ 
+                                        CircleAvatar ( 
+                                          backgroundColor : Colors.grey, 
+                                          child: Text( 
+                                            authorData[ 'name'][0].toUpperCase (), 
+                                            style: TextStyle (color: 
+Colors.white),  
+                                          ), 
+                                        ), 
+                                        SizedBox (width: 10), 
+                                        Text( 
+                                          authorData[ 'name'], 
+                                          style: TextStyle ( 
+                                              fontWeight : FontWeight .bold, 
+fontSize : 16), 
+                                        ), 
+                                        Spacer(), 
+                                        if 
+(FirebaseAuth .instance.currentUser !.uid == 
+                                            post['user'].id) 
+                                          PopupMenuButton <String>( 
+                                            onSelected : (value) {  
+                                              if (value == 'Edit') { 
+                                                _editPostDialog (post); 
+                                              } else if (value == 'Delete' ) { 
+                                                _deletePost (); 
+                                              } 
+                                            }, 
+                                            itemBuilder : (context) => [ 
+                                              PopupMenuItem ( 
+                                                value: 'Edit', 
+                                                child: Text('Edit'), 
+                                              ), 
+                                              PopupMenuItem ( 
+                                                value: 'Delete' , 
+                                                child: Text('Delete' ), 
+                                              ), 
+                                            ], 
+                                          ), 
+                                      ], 
+                                    ); 
+                                  }, 
+                                ), 
+                                SizedBox (height: 10), 
+                                Text( 
+                                  post['heading' ], 
+                                  style: TextStyle ( 
+                                      fontSize : 20, 
+                                      fontWeight : FontWeight .bold, 
+                                      color: Colors.black87),  
+                                ), 
+                                SizedBox (height: 10), 
+                                Text( 
+                                  post['description' ], 
+                                  style: TextStyle (color: Colors.black54, 
+fontSize : 14), 
+                                ), 
+                                if (post['edited' ] == true) 
+                                  Text( 
+                                    '(Edited)' , 
+                                    style: TextStyle ( 
+                                      color: Colors.grey, 
+                                      fontSize : 12, 
+                                    ), 
+                                  ), 
+                                SizedBox (height: 10), 
+                                Row( 
+                                  children : [ 
+                                    IconButton ( 
+                                      icon: Icon( 
+                                        Icons.thumb_up,  
+                                        color: post['likedBy' ] 
+                                            .contains (FirebaseAuth .instance.curre
+ntUser!.uid) 
+                                            ? Colors.blue 
+                                            : Colors.grey, 
+                                      ), 
+                                      onPressed : () => 
+                                          _likePost (post['likes'], 
+post['likedBy' ]), 
+                                    ), 
+                                    Text( 
+                                      '${post['likes']}', 
+                                      style: TextStyle (fontSize : 14), 
+                                    ), 
+                                  ], 
+                                ), 
+                              ], 
+                            ), 
+                          ), 
+                        ), 
+                        SizedBox (height: 20), 
+                        Text( 
+                          'Comments' , 
+                          style: TextStyle ( 
+                              fontSize : 16, 
+                              fontWeight : FontWeight .bold, 
+                              color: Colors.black87),  
+                        ), 
+                        SizedBox(height: 10), 
+                        StreamBuilder <QuerySnapshot >( 
+                          stream: FirebaseFirestore .instance  
+                              .collection ('topics' ) 
+                              .doc(widget.topicId)  
+                              .collection ('posts') 
+                              .orderBy('timestamp' , descending : true) 
+                              .snapshots (), 
+                          builder: (context, commentSnapshot) {  
+                            if (!commentSnapshot.hasData) {  
+                              return Center(child: CircularProgressIndicator ()); 
+                            } 
+ 
+                            List<DocumentSnapshot > comments = 
+                                commentSnapshot.data !.docs; 
+ 
+                            return ListView .builder( 
+                              shrinkWrap : true, 
+                              physics: NeverScrollableScrollPhysics (), 
+                              itemCount : comments.length,  
+                              itemBuilder : (context, index) {  
+                                var commentData = 
+                                comments[index]. data() as Map<String, dynamic>; 
+ 
+                                return FutureBuilder <DocumentSnapshot >( 
+                                  future: FirebaseFirestore .instance  
+                                      .collection ('users') 
+                                      .doc(commentData[ 'author' ]) 
+                                      .get(), 
+                                  builder: (context, commentUserSnapshot) {  
+                                    if (!commentUserSnapshot.hasData) {  
+                                      return CircularProgressIndicator (); 
+                                    } 
+ 
+                                    var commentUserData = 
+                                    commentUserSnapshot.data !.data() 
+                                    as Map<String, dynamic>; 
+ 
+                                    return Card( 
+                                      margin: EdgeInsets .symmetric (vertical : 
+8.0), 
+                                      child: Padding( 
+                                        padding: const EdgeInsets .all(12.0), 
+                                        child: Column( 
+                                          crossAxisAlignment : 
+CrossAxisAlignment .start, 
+                                          children : [ 
+                                            Row( 
+                                              children : [ 
+                                                CircleAvatar ( 
+                                                  backgroundColor : Colors.grey, 
+                                                  child: Text( 
+                                                    commentUserData[ 'name'][0] 
+                                                        .toUpperCase (), 
+                                                    style: 
+                                                    TextStyle (color: 
+Colors.white),  
+                                                  ), 
+                                                ), 
+                                                SizedBox (width: 10), 
+                                                Text( 
+                                                  commentUserData[ 'name'], 
+                                                  style: TextStyle ( 
+                                                      fontWeight : 
+FontWeight .bold, 
+                                                      fontSize : 14), 
+                                                ), 
+                                                Spacer(), 
+                                                if (FirebaseAuth .instance  
+                                                    .currentUser !.uid == 
+                                                    commentData[ 'author' ]) 
+                                                  PopupMenuButton <String>( 
+                                                    onSelected : (value) {  
+                                                      if (value == 'Edit') { 
+                                                        _editCommentDialog ( 
+                                                            commentData,  
+                                                            comments[index].id);  
+                                                      } else if (value == 
+                                                          'Delete' ) { 
+                                                        _deleteComment ( 
+                                                            comments[index].id);  
+                                                      } 
+                                                    }, 
+                                                    itemBuilder : (context) => [ 
+                                                      PopupMenuItem ( 
+                                                        value: 'Edit', 
+                                                        child: Text('Edit'), 
+                                                      ), 
+                                                      PopupMenuItem ( 
+                                                        value: 'Delete' , 
+                                                        child: Text('Delete' ), 
+                                                      ), 
+                                                    ], 
+                                                  ), 
+                                              ], 
+                                            ), 
+                                            SizedBox(height: 10), 
+                                            Text(commentData[ 'text']), 
+                                            if (commentData[ 'edited' ] == true) 
+                                              Text( 
+                                                '(Edited)' , 
+                                                style: TextStyle ( 
+                                                  color: Colors.grey, 
+                                                  fontSize : 12, 
+                                                ), 
+                                              ), 
+                                            Row( 
+                                              children : [ 
+                                                IconButton ( 
+                                                  icon: Icon( 
+                                                    Icons.thumb_up,  
+                                                    color: commentData[ 'likedBy' ] 
+                                                        .contains (FirebaseAuth  
+                                                        .instance  
+                                                        .currentUser !.uid) 
+                                                        ? Colors.blue 
+                                                        : Colors.grey, 
+                                                    size: 20, 
+                                                  ), 
+                                                  onPressed : () => _likeComment ( 
+                                                      commentData[ 'likes'], 
+                                                      comments[index].id),  
+                                                ), 
+                                                Text( 
+                                                  '${commentData ['likes']}', 
+                                                  style: TextStyle (fontSize : 12), 
+                                                ), 
+                                              ], 
+                                            ), 
+                                          ], 
+                                        ), 
+                                      ), 
+                                    ); 
+                                  }, 
+                                ); 
+                              }, 
+                            ); 
+                          }, 
+                        ), 
+                      ], 
+                    ), 
+                  ), 
+                ), 
+              ), 
+              Padding( 
+                padding: const EdgeInsets .all(8.0), 
+                child: Row( 
+                  children : [ 
+                    Expanded ( 
+                      child: TextField ( 
+                        controller : commentController,  
+                        decoration : InputDecoration ( 
+                          labelText : 'Write a comment...' , 
+                          border: OutlineInputBorder ( 
+                            borderRadius : BorderRadius .circular (20), 
+                          ), 
+                          contentPadding : 
+                          EdgeInsets .symmetric (horizontal : 16, vertical : 8), 
+                        ), 
+                      ), 
+                    ), 
+                    SizedBox (width: 8), 
+                    IconButton( 
+                      icon: Icon(Icons.send, color : Colors.blueAccent),  
+                      onPressed : _addComment,  
+                    ), 
+                  ], 
+                ), 
+              ), 
+            ], 
+          ); 
+        }, 
+      ), 
+    ); 
+  } 
+ 
+  // Add Comment Logic  
+  void _addComment () async { 
+    String commentText = commentController.text. trim(); 
+    if (commentText.isNotEmpty) {  
+      await FirebaseFirestore .instance  
+          .collection ('topics' ) 
+          .doc(widget.topicId)  
+          .collection ('posts') 
+          .add({ 
+        'author' : FirebaseAuth .instance.currentUser !.uid, 
+        'text': commentText,  
+        'timestamp' : Timestamp .now(), 
+        'likes': 0, 
+        'likedBy' : [], 
+        'edited' : false, 
+      }); 
+      commentController. clear(); 
+    } 
+  } 
+ 
+  // Delete Post Logic  
+  void _deletePost () async { 
+    await 
+FirebaseFirestore .instance. collection ('topics' ).doc(widget.topicId). delete(); 
+    Navigator .pop(context);  
+  } 
+ 
+  // Delete Comment Logic  
+  void _deleteComment (String commentId) async { 
+    await FirebaseFirestore .instance  
+        .collection ('topics' ) 
+        .doc(widget.topicId)  
+        .collection ('posts') 
+        .doc(commentId)  
+        .delete(); 
+  } 
+ 
+  // Edit Post Dialog  
+  void _editPostDialog (Map<String, dynamic> post) {  
+    editPostController.text = post['description' ]; 
+    showDialog ( 
+      context: context,  
+      builder: (context) => AlertDialog ( 
+        title: Text('Edit Post' ), 
+        content: TextField ( 
+          controller: editPostController,  
+          maxLines : 3, 
+          decoration : InputDecoration (labelText : 'Post Description' ), 
+        ), 
+        actions: [ 
+          TextButton ( 
+            child: Text('Cancel' ), 
+            onPressed : () => Navigator .pop(context),  
+          ), 
+          TextButton ( 
+            child: Text('Save'), 
+            onPressed : () async { 
+              String updatedText = editPostController.text. trim(); 
+              if (updatedText.isNotEmpty) {  
+                await FirebaseFi restore.instance  
+                    .collection ('topics' ) 
+                    .doc(widget.topicId)  
+                    .update({ 
+                  'description' : updatedText,  
+                  'edited' : true, 
+                }); 
+                Navigator .pop(context);  
+              } 
+            }, 
+          ), 
+        ], 
+      ), 
+    ); 
+  } 
+ 
+  // Edit Comment Dialog  
+  void _editCommentDialog (Map<String, dynamic> commentData, String commentId) {  
+    editCommentController.text = commentData[ 'text']; 
+    showDialog ( 
+      context: context,  
+      builder: (context) => AlertDialog ( 
+        title: Text('Edit Comment' ), 
+        content: TextField ( 
+          controller : editCommentController,  
+          maxLines : 2, 
+          decoration : InputDecoration (labelTex t: 'Comment Text' ), 
+        ), 
+        actions: [ 
+          TextButton ( 
+            child: Text('Cancel' ), 
+            onPressed : () => Navigator .pop(context),  
+          ), 
+          TextButton ( 
+            child: Text('Save'), 
+            onPressed : () async { 
+              String updatedText = editCommentController.text. trim(); 
+              if (updatedText.isNotEmpty) {  
+                await FirebaseFirestore .instance  
+                    .collection ('topics' ) 
+                    .doc(widget.topicId)  
+                    .collection ('posts') 
+                    .doc(commentId)  
+                    .update({ 
+                  'text': updatedText,  
+                  'edited' : true, 
+                }); 
+                Navigator .pop(context);  
+              } 
+            }, 
+          ), 
+        ], 
+      ), 
+    ); 
+  } 
+ 
+  // Like/Unlike Post Logic  
+  void _likePost (int likes, List likedBy) async { 
+    String userId = FirebaseAuth .instance.currentUser !.uid; 
+    if (likedBy. contains (userId)) {  
+      // Unlike the post  
+      await 
+FirebaseFirestore .instance. collection ('topics' ).doc(widget.topicId). update({ 
+        'likes': likes - 1, 
+        'likedBy' : FieldValue .arrayRemove ([userId]),  
+      }); 
+    } else { 
+      // Like the post  
+      await 
+FirebaseF irestore .instance. collection ('topics' ).doc(widget.topicId). update({ 
+        'likes': likes + 1, 
+        'likedBy' : FieldValue .arrayUnion ([userId]),  
+      }); 
+    } 
+  } 
+ 
+  // Like/Unlike Comment Logic  
+  void _likeComment (int likes, String commentId) async { 
+    String userId = FirebaseAuth .instance.currentUser !.uid; 
+    DocumentSnapshot  commentSnapshot = await FirebaseFirestore .instance  
+        .collection ('topics' ) 
+        .doc(widget.topicId)  
+        .collection ('posts') 
+        .doc(commentId)  
+        .get(); 
+ 
+    List likedBy = commentSnapshot[ 'likedBy' ]; 
+ 
+    if (likedBy. contains (userId)) {  
+      // Unlike the comment  
+      await FirebaseFirestore .instance  
+          .collection ('topics' ) 
+          .doc(widget.topicId)  
+          .collection ('posts') 
+          .doc(commentId)  
+          .update({ 
+        'likes': likes - 1, 
+        'likedBy' : FieldValue .arrayRemove ([userId]),  
+      }); 
+    } else { 
+      // Like the comment  
+      await FirebaseFirestore .instance  
+          .collection ('topics' ) 
+          .doc(widget.topicId)  
+          .collection ('posts') 
+          .doc(commentId)  
+          .update({ 
+        'likes': likes + 1, 
+        'likedBy' : FieldValue .arrayUnion ([userId]),  
+      }); 
+    } 
+  } 
+} 
+ 
+import 'package:flutter/material.dart' ; 
+import 'package:cloud_firestore/cloud_firestore.dart' ; 
+import 'package:firebase_auth/firebase_auth.dart' ; 
+import 'post_details_page.dart' ; 
+ 
+class TopicsPage  extends StatelessWidget  { 
+  final String categoryName;  
+ 
+  TopicsPage ({required  this.categoryName});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: Text('$categoryName  Topics'), 
+        backgroundColor : Colors.blueAccent,  
+      ), 
+      body: StreamBuilder <QuerySnapshot >( 
+        stream: FirebaseFirestore .instance  
+            .collection ('topics' ) 
+            .where('category' , isEqualTo : categoryName)  
+            .orderBy('timestamp' , descending : true) 
+            .snapshots (), 
+        builder: (context, snapshot) {  
+          if (!snapshot.hasData) {  
+            return Center(child: CircularProgressIndicator ()); 
+          } 
+ 
+          List<DocumentSnapshot > docs = snapshot.data !.docs; 
+          return ListView .builder( 
+            itemCount : docs.length,  
+            itemBuilder : (context, index) {  
+              var data = docs[index]. data() as Map<String, dynamic>; 
+              return Card( 
+                margin: EdgeInsets .all(8.0), 
+                child: ListTile ( 
+                  title: Text(data['heading' ]), 
+                  subtitle : Text('Likes: ${data['likes']} - Posted on: 
+${data['timestamp' ].toDate()}'), 
+                  trailing : Icon(Icons.arrow_forward),  
+                  onTap: () { 
+                    Navigator .push( 
+                      context,  
+                      MaterialPageRoute ( 
+                        builder: (context) => PostDetailsPage ( 
+                          topicId: docs[index].id,  
+                          categoryName : categoryName,  
+                        ), 
+                      ), 
+                    ); 
+                  }, 
+                ), 
+              ); 
+            }, 
+          ); 
+        }, 
+      ), 
+      floatingActionButton : FloatingActionButton ( 
+        onPressed : () { 
+          _addTopic (context);  
+        }, 
+        child: Icon(Icons.add), 
+      ), 
+    ); 
+  } 
+ 
+  void _addTopic (BuildContext  context) {  
+    TextEditingController  headingController = TextEditingController (); 
+    TextEditingController  descriptionController = TextEditingController (); 
+ 
+    showDialog ( 
+      context: context,  
+      builder: (context) => AlertDialog ( 
+        title: Text('Add New Topic' ), 
+        content: Column( 
+          children : [ 
+            TextField ( 
+              controller : headingController,  
+              decoration : InputDecoration (labelText : 'Topic Title' ), 
+            ), 
+            TextField ( 
+              controller : descriptionController,  
+              decoration : InputDecoration (labelText : 'Description' ), 
+            ), 
+          ], 
+        ), 
+        actions: [ 
+          TextButton ( 
+            onPressed : () { 
+              Navigator .pop(context);  
+            }, 
+            child: Text('Cancel' ), 
+          ), 
+          ElevatedButton ( 
+            onPressed : () async { 
+              String heading = headingController.text;  
+              String description = descriptionController.text;  
+              String userId = FirebaseAuth .instance.currentUser !.uid; 
+ 
+              if (heading.isNotEmpty && description.isNotEmpty) {  
+                await FirebaseFirestore .instance. collection ('topics' ).add({ 
+                  'heading' : heading,  
+                  'description' : description,  
+                  'category' : categoryName,  
+                  'timestamp' : Timestamp .now(), 
+                  'user': FirebaseFirestore .instance  
+                      .collection ('users') 
+                      .doc(userId), // This stores the user's DocumentReference  
+                  'likes': 0, 
+                  'likedBy' : [], 
+                }); 
+                Navigator .pop(context);  
+              } 
+            }, 
+            child: Text('Post'), 
+          ), 
+        ], 
+      ), 
+    ); 
+  } 
+ 
+} 
+ 
+ 
+import 'package:flutter/material.dart' ; 
+import 'package:url_launcher/url_launcher.dart' ; 
+ 
+class HelplinePage  extends StatelessWidget  { 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: Text('Helpline & Support' ), 
+        backgroundColor : Colors.teal[700], 
+      ), 
+      body: Column( 
+        children : [ 
+          // Header  
+          Padding( 
+            padding: const EdgeInsets .all(16.0), 
+            child: Column( 
+              crossAxisAlignment : CrossAxisAlignment .start, 
+              children : [ 
+                Text( 
+                  'Get Help Now' , 
+                  style: TextStyle (fontSize : 24, fontWeight : FontWeight .bold), 
+                ), 
+                SizedBox (height: 8), 
+                Text( 
+                  'Reach out to trusted mental health organizations for 
+support.' , 
+                  style: TextStyle (fontSize : 16, color: Colors.grey[700]), 
+                ), 
+              ], 
+            ), 
+          ), 
+ 
+          // List of Helplines  
+          Expanded ( 
+            child: ListView ( 
+              padding: const EdgeInsets .symmetric (horizontal : 16), 
+              children : [ 
+                HelplineCard ( 
+                  orgName: 'Kiran Mental Health Helpline' , 
+                  description : '24/7 helpline for mental health support in 
+India.', 
+                  contactNumber : '1800-599-0019', 
+                  website: 'https://k iranhelpline.in' , 
+                ), 
+                HelplineCard ( 
+                  orgName: 'Vandrevala Foundation' , 
+                  description : 'Free mental health support and counseling.' , 
+                  contactNumber : '1860-266-2345', 
+                  website: 'https://vandrevalafoundation.com' , 
+                ), 
+                HelplineCard ( 
+                  orgName: 'Snehi', 
+                  description : 'Helpline for emotional support and mental 
+health.' , 
+                  contactNumber : '91-22-2772-6771', 
+                  website: 'https://snehi.org' , 
+                ), 
+                HelplineCard ( 
+                  orgName: 'NIMHANS' , 
+                  description : 'Psychological support and interventions.' , 
+                  contactNum ber: '080-4611-0007', 
+                  website: 'https://nimhans.ac.in' , 
+                ), 
+                HelplineCard ( 
+                  orgName: 'iCall by TATA Institute' , 
+                  description : 'Psychological chat and call support for Youth' , 
+                  contactNumber : '9152987821' , 
+                  website: 'https://icallhelpline.org/' , 
+                ), 
+                HelplineCard ( 
+                  orgName: 'Champs Helpline by iCall' , 
+                  description : 'Counselling ser vice for Children and Adolsccent' , 
+                  contactNumber : '1800 22 2211' , 
+                  website: 'https://icallhelpline.org/' , 
+                ), 
+ 
+              ], 
+            ), 
+          ), 
+        ], 
+      ), 
+    ); 
+  } 
+} 
+ 
+class HelplineCard  extends StatelessWidget  { 
+  final String orgName;  
+  final String description;  
+  final String contactNumber;  
+  final String website;  
+ 
+  HelplineCard ({ 
+    required  this.orgName,  
+    required  this.description,  
+    required  this.contactNumber,  
+    required  this.website,  
+  }); 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Card( 
+      margin: const EdgeInsets .only(bottom: 16), 
+      shape: RoundedRectangleBorder ( 
+        borderRadius : BorderRadius .circular (10), 
+      ), 
+      child: Padding( 
+        padding: const EdgeInsets .all(16.0), 
+        child: Column( 
+          crossAxisAlignment : CrossAxisAlignment .start, 
+          children : [ 
+            Text( 
+              orgName,  
+              style: TextStyle (fontSize : 18, fontWeig ht: FontWeight .bold), 
+            ), 
+            SizedBox (height: 8), 
+            Text( 
+              description,  
+              style: TextStyle (fontSize : 14, color: Colors.grey[600]), 
+            ), 
+            SizedBox (height: 16), 
+            Row( 
+              mainAxisAlignment : MainAxisAlignment .spaceBetween,  
+              children : [ 
+                Text( 
+                  contactNumber,  
+                  style: TextStyle (fontSize : 16, color: Colors.teal[700]), 
+                ), 
+                ElevatedButton ( 
+                  style: ElevatedButton .styleFrom ( 
+                    backgroundColor : Colors.teal[700], 
+                    shape: RoundedRectangleBorder ( 
+                      borderRadius : BorderRadius .circular (8), 
+                    ), 
+                  ), 
+                  onPressed : () => _launchCaller (contactNumber),  
+                  child: Text('Call Now' ), 
+                ), 
+              ], 
+            ), 
+            SizedBox (height: 8), 
+            // Website Link  
+            GestureDetector ( 
+              onTap: () => _launchURL (website),  
+              child: Text( 
+                website,  
+                style: TextStyle ( 
+                  color: Colors.blue, 
+                  decoration : TextDecoration .underline,  
+                ), 
+              ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+ 
+  // Function to initiate a call  
+  void _launchCaller (String number) async { 
+    final url = 'tel:$number'; 
+    if (await canLaunch (url)) {  
+      await launch(url); 
+    } else { 
+      throw 'Could not launch $url'; 
+    } 
+  } 
+ 
+  // Function to open website in browser  
+  void _launchURL (String url) async { 
+    if (await canLaunch (url)) {  
+      await launch(url); 
+    } else { 
+      throw 'Could not launch $url'; 
+    } 
+  } 
+} 
+ 
+import 'dart:convert' ; 
+import 'package:flutter/material.dart' ; 
+import 'package:flutter/services.dart' ; 
+import 'package:csv/csv.dart' ; 
+import 'package:url_launcher/url_launcher.dart' ; 
+ 
+class PsychiatristSearchPage  extends StatefulWidget  { 
+  @override  
+  _PsychiatristSearchPageState  createState () => _PsychiatristSearchPageState (); 
+} 
+ 
+class _PsychiatristSearchPageState  extends State<PsychiatristSearchPage > { 
+  final TextEditingController  _cityController = TextEditingController (); 
+  List<Map<String, dynamic>> _psychiatrists = []; 
+  List<Map<String, dynamic>> _filteredResults = []; 
+  List<Map<String, dynamic>> _ourTeam = []; 
+  bool isLoading = false; 
+ 
+  // Function to load CSV data  
+  Future<void> loadCsvData () async { 
+    setState (() { 
+      isLoading = true; 
+    }); 
+    try { 
+      final csvString = await 
+rootBundle. loadString ('assets/data/psychiatrists.csv' ); 
+      List<List<dynamic>> csvData = const 
+CsvToListConverter ().convert(csvString);  
+ 
+      // Convert CSV rows to a list of maps for easier handling  
+      final headers = csvData.first. map((e) => e.toString ()).toList(); 
+      _psychiatrists = csvData 
+          .skip(1) // Skip headers  
+          .map((row) => Map<String, dynamic>.fromIterables (headers, row))  
+          .toList(); 
+ 
+      // Include "Anand  Psychiatry Clinic" data in the "Our Team" section 
+regardless of city  
+      _ourTeam = [ 
+        { 
+          'title': 'Anand Psychiatry Clinic' , 
+          'address' : 'Beside Renuka Medical, Opp J.D.C.C Bank Head office, Ring 
+Rd, Jalgaon, Maharashtra 425001 , India' , 
+          'phone': '+91 98227 97912' , 
+          'imageUrl' : 
+'https://lh5.googleusercontent.com/p/AF1QipO4QKeNJn6oSBKCFICXKSpI2ZDfbIrwoFTWutYv
+=w426-h240-k-no', 
+          'website' : 
+'https://www.google.com/maps/search/?api=1& query=Anand%20Psychiatry%20clinic&quer
+y_place_id=ChIJneXhz_MP2TsRI9het3 -sUMM', 
+          'city': 'Jalgaon' , // You can set the city as Jalgaon here for display 
+purposes  
+          'totalScore' : '4.5', // Optional, add if required  
+        }, 
+      ]; 
+    } catch (e) { 
+      print("Error loading CSV: $e"); 
+    } finally { 
+      setState (() { 
+        isLoading = false; 
+      }); 
+    } 
+  } 
+ 
+  // Function to filter results based on city  
+  void filterResults (String city) { 
+    setState (() { 
+      if (city.isEmpty) {  
+        _filteredResults = []; 
+      } else { 
+        _filteredResults = _psychiatrists  
+            .where((entry) => 
+        entry['city']?.toString ().toLowerCase () == city.toLowerCase () && 
+            entry['title'] != 'Anand Psychiatry Clinic' ) // Exclude "Our Team"  
+            .toList(); 
+      } 
+    }); 
+  } 
+ 
+  @override  
+  void initState () { 
+    super.initState (); 
+    loadCsvData (); // Load CSV data when the screen initializes  
+  } 
+ 
+  Widget _buildCard (Map<String, dynamic> psychiatrist) {  
+    final String? imageUrl = psychiatrist[ 'imageUrl' ]; 
+    final bool isImageAvailable = imageUrl != null && imageUrl.isNotEmpty;  
+ 
+    return Card( 
+      elevation : 5, 
+      margin: const EdgeInsets .symmetric (vertical : 8, horizontal : 16), 
+      shape: RoundedRectangleBorder ( 
+        borderRadius : BorderRadius .circular (12), 
+      ), 
+      child: Column( 
+        crossAxisAlignment : CrossAxisAlignment .start, 
+        children : [ 
+          ClipRRect ( 
+            borderRadius : const BorderRadius .vertical (top: Radius.circular (12)), 
+            child: Image.network( 
+              isImageAvailable ? imageUrl : '', // Use imageUrl if valid  
+              height: 150, 
+              width: double.infinity,  
+              fit: BoxFit.cover, 
+              errorBuilder : (context, error, stackTrace) {  
+                return Image.asset( 
+                  'assets/default.png' , 
+                  height: 150, 
+                  width: double.infinity,  
+                  fit: BoxFit.cover, 
+                ); 
+              }, 
+            ), 
+          ), 
+          Padding( 
+            padding: const EdgeInsets .all(16.0), 
+            child: Column( 
+              crossAxisAlignment : CrossAxisAlignment .start, 
+              children : [ 
+                Text( 
+                  psychiatrist[ 'title'] ?? 'Unknown' , 
+                  style: const TextStyle ( 
+                    fontSize : 18, 
+                    fontWeight : FontWeight .bold, 
+                  ), 
+                ), 
+                const SizedBox (height: 8), 
+                Text( 
+                  psychiatrist[ 'address' ] ?? 'Address not available' , 
+                  style: const TextStyle (fontSize : 14, color: Colors.grey), 
+                ), 
+                const SizedBox (height: 16), 
+                Row( 
+                  children : [ 
+                    const Icon(Icons.phone, color : Colors.green),  
+                    const SizedBox (width: 8), 
+                    Text( 
+                      psychiatrist[ 'phone'] ?? 'N/A', 
+                      style: const TextStyle ( 
+                        fontSize : 16, 
+                        fontWeight : FontWeight .bold, 
+                        color: Colors.green, 
+                      ), 
+                    ), 
+                  ], 
+                ), 
+                const SizedBox (height: 12), 
+                GestureDetector ( 
+                  onTap: () async { 
+                    final website = psychiatrist[ 'website' ] ?? ''; 
+                    if (website.isNotEmpty) {  
+                      final uri = Uri.parse(website); 
+                      if (await canLaunchUrl (uri)) {  
+                        await launchUrl (uri); 
+                      } else { 
+                        ScaffoldMessenger .of(context). showSnackBar ( 
+                          const SnackBar ( 
+                            content: Text('Could not open website' ), 
+                          ), 
+                        ); 
+                      } 
+                    } 
+                  }, 
+                  child: Row( 
+                    children : [ 
+                      const Icon(Icons.link, color : Colors.blue), 
+                      const SizedBox (width: 8), 
+                      Text( 
+                        psychiatrist[ 'website' ] ?? 'Website not available' , 
+                        style: const TextStyle ( 
+                          fontSize : 16, 
+                          color: Colors.blue, 
+                          decoration : TextDecoration .underline,  
+                        ), 
+                      ), 
+                    ], 
+                  ), 
+                ), 
+                const SizedBox (height: 16), 
+                Row( 
+                  children : [ 
+                    const Icon(Icons.star, color : Colors.amber),  
+                    const SizedBox (width: 8), 
+                    Text( 
+                      'Rating: ${psychiatrist ['totalScore' ] ?? 'N/A'}', 
+                      style: const TextStyle ( 
+                        fontSize : 16, 
+                        fontWeight : FontWeight .bold, 
+                        color: Colors.amber, 
+                      ), 
+                    ), 
+                  ], 
+                ), 
+              ], 
+            ), 
+          ), 
+        ], 
+      ), 
+    ); 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('Psychiatrist Search' ), 
+      ), 
+      body: Column( 
+        children : [ 
+          Padding( 
+            padding: const EdgeInsets .all(16.0), 
+            child: TextField ( 
+              controller : _cityController,  
+              decoration : InputDecoration ( 
+                labelText : 'Enter City' , 
+                border: OutlineInputBorder ( 
+                  borderRadius : BorderRadius .circular (12), 
+                ), 
+                suffixIcon : IconButton ( 
+                  icon: const Icon(Icons.search),  
+                  onPressed : () => filterResults (_cityController.text),  
+                ), 
+              ), 
+            ), 
+          ), 
+          if (isLoading)  
+            const Center(child: CircularProgressIndicator ()) 
+          else 
+            Expanded ( 
+              child: ListView ( 
+                children : [ 
+                  // Display "Our Team" section  
+                  if (_ourTeam.isNotEmpty) ...[  
+                    const Padding( 
+                      padding: EdgeInsets .all(16.0), 
+                      child: Text( 
+                        'Our Team' , 
+                        style: TextStyle ( 
+                          fontSize : 22, 
+                          fontWeight : FontWeight .bold, 
+                        ), 
+                      ), 
+                    ), 
+                    ..._ourTeam. map((psychiatrist) => 
+_buildCard (psychiatrist)). toList(), 
+                  ], 
+                  // Display "Psychiatrists Nearby" section  
+                  if (_filteredResults.isNotEmpty) .. .[ 
+                    const Padding( 
+                      padding: EdgeInsets .all(16.0), 
+                      child: Text( 
+                        'Psychiatrists Nearby' , 
+                        style: TextStyle ( 
+                          fontSize : 22, 
+                          fontWeight : FontWeight .bold, 
+                        ), 
+                      ), 
+                    ), 
+                    ..._filteredResults. map((psychiatrist) => 
+_buildCard (psychiatrist)). toList(), 
+                  ], 
+                  // If no results  
+                  if (_filteredResults.isEmpty && _ourTeam.isEmpty)  
+                    const Center( 
+                      child: Text('No psychiatrists found' ), 
+                    ), 
+                ], 
+              ), 
+            ), 
+        ], 
+      ), 
+    ); 
+  } 
+} 
+ 
+import 'dart:io' ; 
+import 'package:flutter/material.dart' ; 
+import 'package:dio/dio.dart' ; 
+import 'package:path_provider/path_provider.dart' ; 
+import 'package:flutter_cached_pdfview/flutter_cached_pdfview.dart' ; 
+import 'package:youtube_player_flutter/youtube_player_flutter.dart' ; 
+import 'package:url_launcher/url_launcher.dart' ; 
+ 
+class AnxLiteraturePage  extends StatefulWidget  { 
+  @override  
+  _AnxLiteraturePageState  createState () => _AnxLiteraturePageState (); 
+} 
+ 
+class _AnxLiteraturePageState  extends State<AnxLiteraturePage > { 
+  // Store file paths for downloaded PDFs  
+  List<String?> localFilePaths = List.filled(8, null); 
+ 
+  @override  
+  void initState () { 
+    super.initState (); 
+    downloadAndSavePdfs (); 
+  } 
+ 
+  Future<void> downloadAndSavePdfs () async { 
+    final pdfUrls = [ 
+      'https://drive.google.com/uc?export=download&id=1A_1WBIMJ6HlPwUaUseMKkqcmU4
+SJvEeL', // Book 1 URL  
+      'https://drive.google.com/uc?export=download&id=1 -
+xEtlfLrDPQB4VHACgxPpD6wz9NF6lS0 ', // Book 2 URL  
+      'https://drive.google.com/uc?export=download&id=188fqLSJrtwv1L0oS -
+LeV3qYcUUDoJ6lm' , // Book 3 URL  
+      'https://drive.google.com/uc?export=download&id=18w3_B95JI_Eer688bnI9VMqUgX
+jL1z_0', // Book 4 URL  
+      'https://drive.google.com /uc?export=download&id=1OVrds8qn6YluTIfhn2 -
+_fDKOdwwMth1x' , // Book 5 URL  
+      'https://drive.google.com/uc?export=download&id=1uPa9qmZjhWHY5oEQDXRxlsg -
+h8l-nIh2', // Book 6 URL  
+      'https://drive.google.com/uc?export=download&id=1BcdXRqr1ptrx0f9CczFn627l hn
+_G0Nzm', // Book 7 URL  
+      'https://drive.google.com/uc?export=download&id=18_bWrAqhUwk -
+0snInqIPkcz5zl9XFBwN' , // Book 8 URL  
+    ]; 
+ 
+    final dir = await getApplicationDocumentsDirectory (); 
+ 
+    for (int i = 0; i < pdfUrls.length; i ++) { 
+      final fileName = 'book${i + 1}.pdf'; 
+      final filePath = '${dir.path}/$fileName '; 
+ 
+      try { 
+        await Dio().download (pdfUrls[i], filePath);  
+        setState (() { 
+          localFilePaths[i] = filePath;  
+        }); 
+      } catch (e) { 
+        print('Error downloading file $i: $e'); 
+      } 
+    } 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    final bookData = [ 
+      {'title': 'Book 1: Anxiety and Phobia Workbook' , 'subtitle' : '-EDMUND J 
+BOURNE', 'image': 'assets/book1.png' }, 
+      {'title': 'Book 2: Feeling Good' , 'subtitle' : '-David D Burns' , 'image': 
+'assets/book2.png' }, 
+      {'title': 'Book 3: ' , 'subtitle' : 'Effective coping methods' , 'image': 
+'assets/book3.png' }, 
+      {'title': 'Book 4: Mindfulness' , 'subtitle' : 'Practicing mindfulness' , 
+'image': 'assets/book4.png' }, 
+      {'title': 'Book 5: Emotional Resilience' , 'subtitle' : 'Building 
+resilience' , 'image': 'assets/book5.png' }, 
+      {'title': 'Book 6: Stress Management' , 'subtitle' : 'Managing stress 
+levels', 'image': 'assets/book6.png' }, 
+      {'title': 'Book 7: Positive Thinking' , 'subtitle' : 'Cultivate positive 
+thoughts' , 'image': 'assets/book7.png' }, 
+      {'title': 'Book 8: Self -Care Basics' , 'subtitle' : 'Essentials of self -
+care', 'image': 'assets/book8.png' }, 
+    ]; 
+ 
+    return Scaffold ( 
+      appBar: AppBar(title: Text('Anxiety Literature' )), 
+      body: Padding( 
+        padding: const EdgeInsets .all(8.0), 
+        child: GridView .builder( 
+          gridDelegate : SliverGridDelegateWithFixedCrossAxisCount ( 
+            crossAxisCount : 2, 
+            childAspectRatio : 0.75, 
+            crossAxisSpacing : 8, 
+            mainAxisSpacing : 8, 
+          ), 
+          itemCount : bookData.length,  
+          itemBuilder : (context, index) {  
+            return BookCard ( 
+              title: bookData[index][ 'title']!, 
+              subtitle : bookData[index][ 'subtitle' ]!, 
+              image: AssetImage (bookData[index][ 'image']!), 
+              onTap: () { 
+                if (localFilePaths[index] != null) { 
+                  Navigator .push( 
+                    context,  
+                    MaterialPageRoute ( 
+                      builder: (context) => PDFViewerPage (localFilePath : 
+localFilePaths[index] !), 
+                    ), 
+                  ); 
+                } else { 
+                  ScaffoldMessenger .of(context). showSnackBar ( 
+                    SnackBar (content : Text("File is still downloading. Please 
+wait..." )), 
+                  ); 
+                } 
+              }, 
+            ); 
+          }, 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+class BookCard  extends StatelessWidget  { 
+  final String title; 
+  final String subtitle;  
+  final ImageProvider  image; 
+  final VoidCallback  onTap; 
+ 
+  BookCard ({required  this.title, required  this.subtitle, required  this.image, 
+required  this.onTap});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return GestureDetector ( 
+      onTap: onTap, 
+      child: Card( 
+        elevation : 4, 
+        shape: RoundedRectangleBorder (borderRadius : BorderRadius .circular (12)), 
+        child: Column( 
+          crossAxisAlignment : CrossAxisAlignment .stretch,  
+          children : [ 
+            Expanded ( 
+              child: ClipRRect ( 
+                borderRadius : BorderRadius .vertical (top: Radius.circular (12)), 
+                child: Image(image: image, fit : BoxFit.cover),  
+              ), 
+            ), 
+            Padding( 
+              padding: const EdgeInsets .all(8.0), 
+              child: Column( 
+                crossAxisAlignment : CrossAxisAlignment .start, 
+                children : [ 
+                  Text( 
+                    title, 
+                    style: TextStyle (fontWeight : FontWeight .bold , fontSize : 13), 
+                  ), 
+                  SizedBox (height: 4), 
+                  Text( 
+                    subtitle,  
+                    style: TextStyle (color: Colors.grey[600], fontSize : 12), 
+                  ), 
+                ], 
+              ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+class PDFViewerPage  extends StatelessWidget  { 
+  final String localFilePath;  
+ 
+  PDFViewerPage ({required  this.localFilePath});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar(title: Text('Book PDF Viewer' )), 
+      body: PDF().fromPath (localFilePath),  
+    ); 
+  } 
+} 
+ 
+ 
+class AnxExercisePage  extends StatelessWidget  { 
+  final List<Map<String, String>> videoData = [ 
+    { 
+      'url': 'https://youtu.be/odADwWzHR24?si=lSmcmn2sutBgCRUB' , 
+      'title': 'Breathing Techniques for Anxiety'  
+    }, 
+    { 
+      'url': 'https://youtu.be/I 77hh5I69gA?si=u -y0AITeKaIgBhUi' , 
+      'title': 'Mindful Meditation Exercise'  
+    }, 
+  ]; 
+ 
+  final List<Map<String, String>> articleData = [ 
+    { 
+      'title': '8 Breathing exercises for Anxiety' , 
+      'url': 'https://www.healthline.com/health/breathing -exercises -for-
+anxiety#long -exhale', 
+    }, 
+    { 
+      'title': 'Yoga for Anxiety' , 
+      'url': 'https://www.medicalnewstoday.com/articles/anxiety -for-yoga-
+benefits -and-poses#poses' , 
+    }, 
+  ]; 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar(title: Text('Anxiety Exercises' )), 
+      body: ListView ( 
+        padding: const EdgeInsets .all(8.0), 
+        children : [ 
+          SectionTitle (title: 'Video Exercises' ), 
+          ...videoData. map((data) => VideoCard (data: data)).toList(), 
+ 
+          SectionTitle (title: 'Exercise Articles' ), 
+          ...articleData. map((data) => ArticleCard (data: data)).toList(), 
+        ], 
+      ), 
+    ); 
+  } 
+} 
+ 
+// Section title widget  
+class SectionTitle  extends StatelessWidget  { 
+  final String title; 
+ 
+  SectionTitle ({required  this.title});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Padding( 
+      padding: const EdgeInsets .symmetric (vertical : 12.0), 
+      child: Text( 
+        title, 
+        style: TextStyle (fontSize : 20, fontWeight : FontWeight .bold, color : 
+Colors.blueAccent),  
+      ), 
+    ); 
+  } 
+} 
+ 
+// Card for displaying video with title and thumbnail  
+class VideoCard  extends StatelessWidget  { 
+  final Map<String, String> data; 
+ 
+  VideoCard ({required  this.data});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    final videoId = YoutubePlayer .convertUrlToId (data['url']!)!; 
+    final thumbnailUrl = 'https://img.youtube.com/vi/ $videoId/0.jpg'; 
+ 
+    return Card( 
+      shape: RoundedRectangleBorder (borderRadius : BorderRadius .circular (12)), 
+      elevation : 4, 
+      child: ListTile ( 
+        contentPadding : EdgeInsets .all(8.0), 
+        title: Text(data['title']!, style: TextStyle (fontWeight : 
+FontWeight .bold)),  
+        subtitle : Text('Tap to watch' ), 
+        leading: ClipRRect ( 
+          borderRadius : BorderRadius .circular (8.0), 
+          child: Image.network(thumbnailUrl, fit : BoxFit.cover, width : 80), 
+        ), 
+        trailing : Icon(Icons.play_circle_fill, color : Colors.blueAccent, size : 
+32), 
+        onTap: () { 
+          Navigator .push( 
+            context,  
+            MaterialPageRoute ( 
+              builder: (context) => YouTubePlayerPage (videoUrl : data['url']!), 
+            ), 
+          ); 
+        }, 
+      ), 
+    ); 
+  } 
+} 
+ 
+// Card for displaying articles  
+class ArticleCard  extends StatelessWidget  { 
+  final Map<String, String> data; 
+ 
+  ArticleCard ({required  this.data});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Card( 
+      shape: RoundedRectangleBorder (borderRadius : BorderRadius .circular (12)), 
+      elevation : 2, 
+      child: ListTile ( 
+        title: Text( 
+          data['title']!, 
+          style: TextStyle (fontWeight : FontWeight .w600, fontSize : 16), 
+        ), 
+        trailing : Icon(Icons.arrow_forward_ios, color : Colors.grey, size : 16), 
+        onTap: () => _launchUrl (data['url']!), 
+      ), 
+    ); 
+  } 
+} 
+ 
+// YouTube player page  
+class YouTubePlayerPage  extends StatefulWidget  { 
+  final String videoUrl;  
+ 
+  YouTubePlayerPage ({required  this.videoUrl});  
+ 
+  @override  
+  _YouTubePlayerPageState  createState () => _YouTubePlayerPageState (); 
+} 
+ 
+class _YouTubePlayerPageState  extends State<YouTubePlayerPage > { 
+  late YoutubePlayerController  _controller;  
+ 
+  @override  
+  void initState () { 
+    super.initState (); 
+    final videoId = YoutubePlayer .convertUrlToId (widget.videoUrl) !; 
+    _controller = YoutubePlayerController ( 
+      initialVideoId : videoId,  
+      flags: YoutubePlayerFlags ( 
+        autoPlay : true, 
+        mute: false, 
+      ), 
+    ); 
+  } 
+ 
+  @override  
+  void dispose() { 
+    _controller. dispose(); 
+    super.dispose(); 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar(title: Text('Exercise Video' )), 
+      body: YoutubePlayer ( 
+        controller : _controller,  
+        showVideoProgressIndicator : true, 
+      ), 
+    ); 
+  } 
+} 
+ 
+// Helper function to launch URLs  
+void _launchUrl (String url) async { 
+  if (await canLaunch (url)) {  
+    await launch(url); 
+  } else { 
+    throw 'Could not launch $url'; 
+  } 
+} 
+ 
+class AnxVideoPage  extends StatelessWidget  { 
+  // List of YouTube channel data  
+  final List<Map<String, String>> youtubeChannels = [ 
+    { 
+      'name': 'Calm Sage' , 
+      'image': 'assets/calm_sage.jpg' , // Replace with your asset path  
+      'description' : 'Mindfulness and guided meditations.' , 
+      'url': 'https://www.youtube.com/c/CalmSage' , 
+    }, 
+    { 
+      'name': 'Therapy in a Nutshell' , 
+      'image': 'assets/therapy_nutshell.jpg' , // Replace with your asset path  
+      'description' : 'Simplifying mental health concepts.' , 
+      'url': 'https://www.youtube.com/c/TherapyinaNutshell' , 
+    }, 
+    { 
+      'name': 'Anxiety Fitness' , 
+      'image': 'assets/self_care_haven.jpg' , // Replace with your asset path  
+      'description' : 'Anxiety a nd self-care strategies.' , 
+      'url': 'https://www.youtube.com/@anxiety_fitness' , 
+    }, 
+    { 
+      'name': 'The Anxiety Guy' , 
+      'image': 'assets/anxiety_guy.jpg' , // Replace with your asset path  
+      'description' : 'Personal experiences and coping  tips.', 
+      'url': 'https://www.youtube.com/c/TheAnxietyGuy' , 
+    }, 
+    { 
+      'name': 'Headspace' , 
+      'image': 'assets/headspace.jpg' , // Replace with your asset path  
+      'description' : 'Mindfulness meditations and animations.' , 
+      'url': 'https://www.youtube.com/c/Headspace' , 
+    }, 
+  ]; 
+ 
+  // Function to open a URL  
+  Future<void> _launchURL (String url) async { 
+    final uri = Uri.parse(url); 
+    if (await canLaunchUrl (uri)) {  
+      await launchUrl (uri); 
+    } else { 
+      throw 'Could not launch $url'; 
+    } 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('Anxiety Videos' ), 
+        backgroundColor : Colors.blueAccent,  
+      ), 
+      body: Padding( 
+        padding: const EdgeInsets .all(8.0), 
+        child: ListView .builder( 
+          itemCount : youtubeChannels.length,  
+          itemBuilder : (context, index) {  
+            final channel = youtubeChannels[index];  
+            return Card( 
+              margin: const EdgeInsets .symmetric (vertical : 8.0), 
+              elevation : 4.0, 
+              child: ListTile ( 
+                leading: CircleAvatar ( 
+                  backgroundImage : AssetImage (channel[ 'image']!), 
+                  radius: 25, 
+                ), 
+                title: Text( 
+                  channel[ 'name']!, 
+                  style: const TextStyle (fontSize : 18.0, fontWeight : 
+FontWeight .bold), 
+                ), 
+                subtitle : Text( 
+                  channel[ 'description' ]!, 
+                  style: const TextStyle (fontSize : 14.0), 
+                ), 
+                trailing : const Icon(Icons.open_in_new),  
+                onTap: () => _launchURL (channel[ 'url']!), 
+              ), 
+            ); 
+          }, 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+ 
+ 
+class AnxGamesPage  extends StatelessWidget  { 
+  final List<Map<String, String>> games = [ 
+    { 
+      'name': 'Calm Breathing Bubble' , 
+      'description' : 'A simple breathing exercise to help you calm down.' , 
+      'link': 'https://calm -with-breathing.vercel.app/'  
+    }, 
+    { 
+      'name': 'Relaxing Sounds' , 
+      'description' : 'Play ambient sounds to relax your mind.' , 
+      'link': 'https://asoftmurmur.com/'  
+    }, 
+    { 
+      'name': 'Color Therapy Game' , 
+      'descrip tion': 'Choose colors to relax and express your emotions.' , 
+      'link': 'https://www.coolmathgames.com/0 -coloring -puzzle' 
+    }, 
+    { 
+      'name': 'Soothing Jigsaw Puzzles' , 
+      'description' : 'Solve relaxing puzzles for mindfulness.' , 
+      'link': 'https://im -a-puzzle.com/'  
+    }, 
+    { 
+      'name': 'Memory Card Game' , 
+      'description' : 'Match cards and boost your cognitive skills.' , 
+      'link': 'https://www.brainhq.com/brain -resources/memory -games/' 
+    }, 
+  ]; 
+ 
+  Future<void> _launchURL (String url) async { 
+    if (await canLaunch (url)) {  
+      await launch(url, forceWebView : true, enableJavaScript : true); 
+    } else { 
+      throw 'Could not launch $url'; 
+    } 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: Text('Anxiety Games' ), 
+        backgroundColor : Colors.blueAccent,  
+      ), 
+      body: Padding( 
+        padding: const EdgeInsets .all(8.0), 
+        child: ListView .builder( 
+          itemCount : games.length,  
+          itemBuilder : (context, index) {  
+            final game = games[index];  
+            return Card( 
+              elevation : 4.0, 
+              margin: EdgeInsets .symmetric (vertical : 8.0), 
+              shape: RoundedRectangleBorder ( 
+                borderRadi us: BorderRadius .circular (12.0), 
+              ), 
+              child: Padding( 
+                padding: const EdgeInsets .all(12.0), 
+                child: Column( 
+                  crossAxisAlignment : CrossAxisAlignment .start, 
+                  children : [ 
+                    Text( 
+                      game['name']!, 
+                      style: TextStyle ( 
+                        fontSize : 20.0, 
+                        fontWeight : FontWeight .bold, 
+                        color: Colors.blueAccent,  
+                      ), 
+                    ), 
+                    SizedBox (height: 8.0), 
+                    Text( 
+                      game['description' ]!, 
+                      style: TextStyle (fontSize : 16.0), 
+                    ), 
+                    SizedBox (height: 12.0), 
+                    ElevatedButton ( 
+                      onPressed : () => _launchURL (game['link']!), 
+                      style: ElevatedButton .styleFrom ( 
+                        backgroundColor : Colors.blueAccent,  
+                        foregroundColor : Colors.white, 
+                        shape: RoundedRectangleBorder ( 
+                          borderRadius : BorderRadius .circular (8.0), 
+                        ), 
+                      ), 
+                      child: Text('Play Now'), 
+                    ), 
+                  ], 
+                ), 
+              ), 
+            ); 
+          }, 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+import 'dart:io' ; 
+import 'package:flutter/material.dart' ; 
+import 'package:dio/dio.dart' ; 
+import 'package:path_provider/path_provider.dart' ; 
+import 'package:flutter_cached_pdfview/flutter_cached_pdfview.dart' ; 
+import 'package:youtube_player_flutter/youtube_player_flutter.dart' ; 
+import 'package:url_launcher/url_launcher.dart' ; 
+ 
+class DepLiteraturePage  extends StatefulWidget  { 
+  @override  
+  _DepLiteraturePageState  createState () => _DepLiteraturePageState (); 
+} 
+ 
+class _DepLiteraturePageState  extends State<DepLiteraturePage > { 
+  // Store file paths for downloaded PDFs  
+  List<String?> localFilePaths = List.filled(8, null); 
+ 
+  @override  
+  void initState () { 
+    super.initState (); 
+    downloadAndSavePdfs (); 
+  } 
+ 
+  Future<void> downloadAndSavePdfs () async { 
+    final pdfUrls = [ 
+      'https://drive.google.com/uc?export=download& id=12VVXB2Oy_isrSwADUFVnIXAwVY
+OUKCSF', // Book 1 URL  
+      'https://drive.google.com/uc?export=download&id=1 -
+xEtlfLrDPQB4VHACgxPpD6wz9NF6lS0' , // Book 2 URL  
+      'https://drive.google.com/uc?export=download&id=1eMsoZIUmI5ccIn4ObEk -
+UDjG4X4Zcm3_' , // Book 3  URL 
+      'https://drive.google.com/uc?export=download&id=1GuUmulfVhifM0uv -
+ESkvqZNl9Uw2dpzZ' , // Book 4 URL  
+      'https://drive.google.com/uc?export=download&id=1t7ztpcZ_eCxHrqUDp1No1BkiQI
+Xe-JRj', // Book 5 URL  
+      'https://drive.google.com/uc?export=d ownload&id=121wg_d9NNGNSSdX_5bjyXGVfH5
+Gxl3lj', // Book 6 URL  
+      'https://drive.google.com/uc?export=download&id=1BcdXRqr1ptrx0f9CczFn627lhn
+_G0Nzm', // Book 7 URL  
+    ]; 
+ 
+    final dir = await getApplicationDocumentsDirectory (); 
+ 
+    for (int i = 0; i < pdfUrls.length; i ++) { 
+      final fileName = 'book${i + 1}.pdf'; 
+      final filePath = '${dir.path}/$fileName '; 
+ 
+      try { 
+        await Dio().download (pdfUrls[i], filePath);  
+        setState (() { 
+          localFilePaths[i] = filePath;  
+        }); 
+      } catch (e) { 
+        print('Error downloading file $i: $e'); 
+      } 
+    } 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    final bookData = [ 
+      {'title': 'Book 1: Ikigai' , 'subtitle' : '-Hector Garcia' , 'image': 
+'assets/book11.png' }, 
+      {'title': 'Book 2: Feeling Good' , 'subtitle' : '-David D Burns' , 'image': 
+'assets/book2.png' }, 
+      {'title': 'Book 3: Overcoming Depression ' , 'subtitle' : 'Effective coping 
+methods' , 'image': 'assets/book13.png' }, 
+      {'title': 'Book 4: Depression Cure' , 'subtitle' : 'The six step process' , 
+'image': 'assets/book14.png' }, 
+      {'title': 'Book 5: Reasons to Stay Alive' ,'subtitle'  :'.'  ,'image': 
+'assets/book15.png' }, 
+      {'title': 'Book 6:The Last Lecture' , 'subtitle' : 'Randy Pau sch', 'image': 
+'assets/book16.png' }, 
+      {'title': 'Book 7: Positive Thinking' , 'subtitle' : 'Cultivate positive 
+thoughts' , 'image': 'assets/book7.png' }, 
+ 
+    ]; 
+ 
+    return Scaffold ( 
+      appBar: AppBar(title: Text('Depression Literature' )), 
+      body: Padding( 
+        padding: const EdgeInsets .all(8.0), 
+        child: GridView .builder( 
+          gridDelegate : SliverGridDelegateWithFixedCrossAxisCount ( 
+            crossAxisCount : 2, 
+            childAspectRatio : 0.75, 
+            crossAxisSpacing : 8, 
+            mainAxisSpacing : 8, 
+          ), 
+          itemCount : bookData.length,  
+          itemBuilder : (context, index) {  
+            return BookCard ( 
+              title: bookData[index][ 'title']!, 
+              subtitle : bookData[index][ 'subtitle' ]!, 
+              image: AssetImage (bookData[index][ 'image']!), 
+              onTap: () { 
+                if (localFilePaths[index] != null) { 
+                  Navigator .push( 
+                    context,  
+                    MaterialPageRoute ( 
+                      builder: (context) => PDFViewerPage (localFilePath : 
+localFilePaths[index] !), 
+                    ), 
+                  ); 
+                } else { 
+                  ScaffoldMessenger .of(context). showSnackBar ( 
+                    SnackBar (content : Text("File is still downloading. Please 
+wait..." )), 
+                  ); 
+                } 
+              }, 
+            ); 
+          }, 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+class BookCard  extends StatelessWidget  { 
+  final String title; 
+  final String subtitle;  
+  final ImageProvider  image; 
+  final VoidCallback  onTap; 
+ 
+  BookCard ({required  this.title, required  this.subtitle, required  this.image, 
+required  this.onTap});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return GestureDetector ( 
+      onTap: onTap, 
+      child: Card( 
+        elevation : 4, 
+        shape: RoundedRectangleBorder (borderRadius : BorderRadius .circular (12)), 
+        child: Column( 
+          crossAxisAlignment : CrossAxisAlignment .stretch,  
+          children : [ 
+            Expanded ( 
+              child: ClipRRect ( 
+                borderRadius : BorderRadius .vertical (top: Radius.circular (12)), 
+                child: Image(image: image, fit : BoxFit.cover),  
+              ), 
+            ), 
+            Padding( 
+              padding: const EdgeInsets .all(8.0), 
+              child: Column( 
+                crossAxisAlignment : CrossAxisAlignment .start, 
+                children : [ 
+                  Text( 
+                    title, 
+                    style: TextStyle (fontWeight : FontWeight .bold , fontSize : 13), 
+                  ), 
+                  SizedBox (height: 4), 
+                  Text( 
+                    subtitle,  
+                    style: TextStyle (color: Colors.grey[600], fontSize : 12), 
+                  ), 
+                ], 
+              ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+class PDFViewerPage  extends StatelessWidget  { 
+  final String localFilePath;  
+ 
+  PDFViewerPage ({required  this.localFilePath});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar(title: Text('Book PDF Viewer' )), 
+      body: PDF().fromPath (localFilePath),  
+    ); 
+  } 
+} 
+ 
+ 
+class DepExercisePage  extends StatelessWidget  { 
+  final List<Map<String, String>> videoData = [ 
+    { 
+      'url': 'https://youtu.be/Sxddnugwu -8?si=V2DtD4B2s2UdIfyi' , 
+      'title': 'Yoga for Depression'  
+    }, 
+    { 
+      'url': 'https://youtu.be/Bk0lzv8hEU8?si= -m86s0OHliJrXE3V' , 
+      'title': '5 ways to deal with depression'  
+    }, 
+  ]; 
+ 
+  final List<Map<String, String>> articleData = [ 
+    { 
+      'title': '7 exercises to ease Depression' , 
+      'url': 'https://www.everydayhealth.com/depression -pictures/great -exercises -
+to-fight-depression.aspx' , 
+    }, 
+    { 
+      'title': 'How exercise helps better than Drugs' , 
+      'url': 'https://www.medicalnewstoday.com/articles/is -exercise -more-
+effective -than-medication -for-depression -and-anxiety' , 
+    }, 
+  ]; 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar(title: Text('Depression Exercises' )), 
+      body: ListView ( 
+        padding: const EdgeInsets .all(8.0), 
+        children : [ 
+          SectionTitle (title: 'Video Exercises' ), 
+          ...videoData. map((data) => VideoCard (data: data)).toList(), 
+ 
+          SectionTitle (title: 'Exercise Articles' ), 
+          ...articleData. map((data) => ArticleCard (data: data)).toList(), 
+        ], 
+      ), 
+    ); 
+  } 
+} 
+ 
+// Section title widget  
+class SectionTitle  extends StatelessWidget  { 
+  final String title; 
+ 
+  SectionTitle ({required  this.title});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Padding( 
+      padding: const EdgeInsets .symmetric (vertical : 12.0), 
+      child: Text( 
+        title, 
+        style: TextStyle (fontSize : 20, fontWeight : FontWeight .bold, color : 
+Colors.blueAccent),  
+      ), 
+    ); 
+  } 
+} 
+ 
+// Card for displaying video with title and thumbnail  
+class VideoCard  extends StatelessWidget  { 
+  final Map<String, String> data; 
+ 
+  VideoCard ({required  this.data});  
+ 
+  @override 
+  Widget build(BuildContext  context) {  
+    final videoId = YoutubePlayer .convertUrlToId (data['url']!)!; 
+    final thumbnailUrl = 'https://img.youtube.com/vi/ $videoId/0.jpg'; 
+ 
+    return Card( 
+      shape: RoundedRectangleBorder (borderRadius : BorderRadius .circular (12)), 
+      elevation : 4, 
+      child: ListTile ( 
+        contentPadding : EdgeInsets .all(8.0), 
+        title: Text(data['title']!, style: TextStyle (fontWeight : 
+FontWeight .bold)),  
+        subtitle : Text('Tap to watch' ), 
+        leading: ClipRRect ( 
+          borderRadius : BorderRadius .circular (8.0), 
+          child: Image.network(thumbnailUrl, fit : BoxFit.cover, width : 80), 
+        ), 
+        trailing : Icon(Icons.play_circle_fill, color : Colors.blueAccent, size : 
+32), 
+        onTap: () { 
+          Navigator .push( 
+            context,  
+            MaterialPageRoute ( 
+              builder: (context) => YouTubePlayerPage (videoUrl : data['url']!), 
+            ), 
+          ); 
+        }, 
+      ), 
+    ); 
+  } 
+} 
+ 
+// Card for displaying articles  
+class ArticleCard  extends StatelessWidget  { 
+  final Map<String, String> data; 
+ 
+  ArticleCard ({required  this.data});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Card( 
+      shape: RoundedRectangleBorder (borderRadius : BorderRadius .circular (12)), 
+      elevation : 2, 
+      child: ListTile ( 
+        title: Text( 
+          data['title']!, 
+          style: TextStyle (fontWeight : FontWeight .w600, fontSize : 16), 
+        ), 
+        trailing : Icon(Icons.arrow_forward_ios, color : Colors.grey, size : 16), 
+        onTap: () => _launchUrl (data['url']!), 
+      ), 
+    ); 
+  } 
+} 
+ 
+// YouTube player page  
+class YouTubePlayerPage  extends StatefulWidget  { 
+  final String videoUrl;  
+ 
+  YouTubePlayerPage ({required  this.videoUrl});  
+ 
+  @override  
+  _YouTubePlayerPageState  createState () => _YouTubePlayerPageState (); 
+} 
+ 
+class _YouTubePlayerPageState  extends State<YouTubePlayerPage > { 
+  late YoutubePlayerController  _controller;  
+ 
+  @override  
+  void initState () { 
+    super.initState (); 
+    final videoId = YoutubePlayer .convertUrlToId (widget.videoUrl) !; 
+    _controller = YoutubePlayerController ( 
+      initialVideoId : videoId,  
+      flags: YoutubePlayerFlags ( 
+        autoPlay : true, 
+        mute: false, 
+      ), 
+    ); 
+  } 
+ 
+  @override  
+  void dispose() { 
+    _controller. dispose(); 
+    super.dispose(); 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar(title: Text('Exercise Video' )), 
+      body: YoutubePlayer ( 
+        controller : _controller,  
+        showVideoProgressIndicator : true, 
+      ), 
+    ); 
+  } 
+} 
+ 
+// Helper function to launch URLs  
+void _launchUrl (String url) async { 
+  if (await canLaunch (url)) {  
+    await launch(url); 
+  } else { 
+    throw 'Could not launch $url'; 
+  } 
+} 
+ 
+class DepVideoPage  extends StatelessWidget  { 
+  // List of YouTube channel data  
+  final List<Map<String, String>> youtubeChannels = [ 
+    { 
+      'name': 'Calm Sage' , 
+      'image': 'assets/calm_sage.jpg' , // Replace with your asset path  
+      'description' : 'Mindfulness and guided meditations.' , 
+      'url': 'https://www.youtube.com/c/CalmSage' , 
+    }, 
+    { 
+      'name': 'Therapy in a Nutshell' , 
+      'image': 'assets/therapy_nutshell.jpg' , // Replace with your asset path  
+      'description' : 'Simplifying mental health concepts.' , 
+      'url': 'https://www.youtube.com/c/TherapyinaNutshell' , 
+    }, 
+ 
+    { 
+      'name': 'Psych2Go' , 
+      'image': 'assets/Psy2go.jpg' , // Replace with your asset path  
+      'description' : 'Varios Mental Illness rel ated info.' , 
+      'url': 'https://www.youtube.com/c/TheAnxietyGuy' , 
+    }, 
+    { 
+      'name': 'Headspace' , 
+      'image': 'assets/headspace.jpg' , // Replace with your asset path  
+      'description' : 'Mindfulness meditations and animations.' , 
+      'url': 'https://www.youtube.com/c/Headspace' , 
+    }, 
+  ]; 
+ 
+  // Function to open a URL  
+  Future<void> _launchURL (String url) async { 
+    final uri = Uri.parse(url); 
+    if (await canLaunchUrl (uri)) {  
+      await launchUrl (uri); 
+    } else { 
+      throw 'Could not launch $url'; 
+    } 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('Depression Videos' ), 
+        backgroundColor : Colors.blueAccent,  
+      ), 
+      body: Padding( 
+        padding: const EdgeInsets .all(8.0), 
+        child: ListView .builder( 
+          itemCount : youtubeChannels.length,  
+          itemBuilder : (context, index) {  
+            final channel = youtubeChannels[index];  
+            return Card( 
+              margin: const EdgeInsets .symmetric (vertical : 8.0), 
+              elevation : 4.0, 
+              child: ListTile ( 
+                leading: CircleAvatar ( 
+                  backgroundImage : AssetImage (channel[ 'image']!), 
+                  radius: 25, 
+                ), 
+                title: Text( 
+                  channel[ 'name']!, 
+                  style: const TextStyle (fontSize : 18.0, fontWeight : 
+FontWeight .bold), 
+                ), 
+                subtitle : Text( 
+                  channel[ 'description' ]!, 
+                  style: const TextStyle (fontSize : 14.0), 
+                ), 
+                trailing : const Icon(Icons.open_in_new),  
+                onTap: () => _launchURL (channel[ 'url']!), 
+              ), 
+            ); 
+          }, 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+ 
+ 
+ 
+import 'package:flutter/material.dart' ; 
+import 'anxiety_resource.dart' ; 
+import'depression_resource.dart' ;// Make sure this includes the necessary 
+resource pages.  
+ 
+class ResourceHome  extends StatelessWidget  { 
+  final List<String> topics = [ 
+    'Anxiety' , 'Depression' , 'PTSD', 'OCD', 'Stress' , 'Bipolar' , 'Miscellaneous'  
+  ]; 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: Text('Mental Health Topics' ), 
+        centerTitle : true, 
+        backgroundColor : Colors.blueAccent,  
+      ), 
+      body: Padding( 
+        padding: const EdgeInsets .all(8.0), 
+        child: GridView .builder( 
+          gridDelegate : SliverGridDelegateWithFixedCrossAxisCount ( 
+            crossAxisCount : 2, 
+            crossAxisSpacing : 10.0, 
+            mainAxisSpacing : 10.0, 
+            childAspectRatio : 1.5, 
+          ), 
+          itemCount : topics.length,  
+          itemBuilder : (context, index) {  
+            return Card( 
+              elevation : 4.0, 
+              shape: RoundedRectangleBorder ( 
+                borderRadius : BorderRadius .circular (12.0), 
+              ), 
+              color: Colors.blue.shade50,  
+              child: InkWell( 
+                onTap: () { 
+                  // Navigate to the resource page based on the topic  
+                  Navigator .push( 
+                    context,  
+                    MaterialPageRoute ( 
+                      builder: (context) => ResourcePage (topic: topics[index]),  
+                    ), 
+                  ); 
+                }, 
+                borderRadius : BorderRadius .circular (12.0), 
+                child: Center( 
+                  child: Text( 
+                    topics[index],  
+                    style: TextStyle ( 
+                      fontSize : 18, 
+                      fontWeight : FontWeight .bold, 
+                      color: Colors.blue.shade800,  
+                    ), 
+                  ), 
+                ), 
+              ), 
+            ); 
+          }, 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+class ResourcePage  extends StatelessWidget  { 
+  final String topic; 
+  ResourcePage ({required  this.topic});  
+ 
+  // Example resources for each topic  
+  final Map<String, List<String>> resources = { 
+    'Anxiety' : [ 
+      'Literature' ,  // When clicked, should go to 'AnxLiteraturePage'  
+      'Exercises' ,   // When clicked, should go to 'AnxExercisePage'  
+      'Videos' , 
+      'Games' 
+    ], 
+    'Depression' : [ 
+      'Literature' ,  // When clicked, should go to 'DepressionLiteraturePage'  
+      'Exercises' ,   // When clicked, should go to 'DepressionExercisePage'  
+      'Videos' ,      // When clicked, should go to 'DepressionVideoPage'  
+    ], 
+    // Add resources for other topics similarly.  
+  }; 
+ 
+  @override  
+  Widget build(BuildContext  context) { 
+    return Scaffold ( 
+      appBar: AppBar(title: Text('$topic Resources' )), 
+      body: Padding( 
+        padding: const EdgeInsets .all(8.0), 
+        child: ListView .builder( 
+          itemCount : resources[topic] ?.length ?? 0, 
+          itemBuilder : (context, index) {  
+            return Card( 
+              elevation : 2.0, 
+              margin: EdgeInsets .symmetric (vertical : 8.0), 
+              child: ListTile ( 
+                contentPadding : EdgeInsets .all(12.0), 
+                title: Text(resources[topic] ![index]),  
+                onTap: () { 
+                  // Navigate to specific pages based on resource name  
+                  if (resources[topic] ![index] == 'Literature' ) { 
+                    if (topic == 'Anxiety' ) { 
+                      Navigator .push( 
+                        context,  
+                        MaterialPageRoute ( 
+                          builder: (context) => AnxLiteraturePage (), 
+                        ), 
+                      ); 
+                    } else if (topic == 'Depression' ) { 
+                      Navigator .push( 
+                        context,  
+                        MaterialPageRoute ( 
+                          builder: (context) => DepLiteraturePage (), 
+                        ), 
+                      ); 
+                    } 
+                  } else if (resources[topic] ![index] == 'Exercises' ) { 
+                    if (topic == 'Anxiety' ) { 
+                      Navigator .push( 
+                        context,  
+                        MaterialPageRoute ( 
+                          builder: (context) => AnxExercisePage (), 
+                        ), 
+                      ); 
+                    } else if (topic == 'Depression' ) { 
+                      Navigator .push( 
+                        context,  
+                        MaterialPageRoute ( 
+                          builder: (context) => DepExercisePage (), 
+                        ), 
+                      ); 
+                    } 
+                  } else if (resources[topic] ![index] == 'Videos' ) { 
+                    if (topic == 'Anxiety' ) { 
+                      Navigator .push( 
+                        context,  
+                        MaterialPageRoute ( 
+                          builder: (context) => AnxVideoPage (), 
+                        ), 
+                      ); 
+                    } else if (topic == 'Depression' ) { 
+                      Navigator .push( 
+                        context,  
+                        MaterialPageRoute ( 
+                          builder: (context) => DepVideoPage (), 
+                        ), 
+                      ); 
+                    } 
+                  } 
+                  else if (resources[topic] ![index] == 'Games') { 
+    if (topic == 'Anxiety' ) { 
+    Navigator .push( 
+    context,  
+    MaterialPageRoute ( 
+    builder: (context) => AnxGamesPage (), 
+    ), 
+    ); 
+    } 
+    } 
+                  }, 
+              ), 
+            ); 
+          }, 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+import 'package:flutter/material.dart' ; 
+ 
+class AnxietyTestPage  extends StatefulWidget  { 
+  const AnxietyTestPage ({super.key}); 
+ 
+  @override  
+  _AnxietyTestPageState  createState () => _AnxietyTestPageState (); 
+} 
+ 
+class _AnxietyTestPageState  extends State<AnxietyTestPage > { 
+  List<int> answers = List.filled(7, 0); // Store answers for 7 questions  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('Anxiety Test' ), 
+        backgroundColor : Colors.teal, 
+      ), 
+      body: SingleChildScrollView ( 
+        padding: const EdgeInsets .all(16.0), 
+        child: Column( 
+          crossAxisAlignment : CrossAxisAlignment .start, 
+          children : [ 
+            const Text( 
+              'Over the last 2 weeks, how often have you been bothered by the 
+following problems?' , 
+              style: TextStyle (fontSize : 18, fontWeight : FontWeight .bold), 
+            ), 
+            const SizedBox (height: 16), 
+            for (int i = 0; i < _questions.length; i ++) _buildQuestion (i), 
+            const SizedBox (height: 20), 
+            ElevatedButton ( 
+              onPressed : _calculateResult,  
+              style: ElevatedButton .styleFrom (backgroundColor : Colors.teal, 
+              ), 
+              child: const Text('Submit' ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+ 
+  Widget _buildQuestion (int index) {  
+    return Column( 
+      crossAxisAlignment : CrossAxisAlignment .start, 
+      children : [ 
+        Text( 
+          '${index + 1}. ${_questions [index]}', 
+          style: const TextStyle (fontSize : 16), 
+        ), 
+        Column( 
+          children : [ 
+            _buildOption (index, 0, 'Not at all' ), 
+            _buildOption (index, 1, 'Several days' ), 
+            _buildOption (index, 2, 'More than half the days' ), 
+            _buildOption (index, 3, 'Nearly every day' ), 
+          ], 
+        ), 
+        const SizedBox (height: 16), 
+      ], 
+    ); 
+  } 
+ 
+  Widget _buildOption (int questionIndex, int value, String text) { 
+    return RadioListTile ( 
+      value: value, 
+      groupValue : answers[questionIndex],  
+      onChanged : (newValue) {  
+        setState (() { 
+          answers[questionIndex] = newValue as int; 
+        }); 
+      }, 
+      title: Text(text, style : const TextStyle (fontSize : 14)), 
+    ); 
+  } 
+ 
+  void _calculateResult () { 
+    int totalScore = answers. reduce((a, b) => a + b); 
+ 
+    if (totalScore <= 4) { 
+      _showResultDialog ( 
+        'Minimal Anxiety' , 
+        'Great job! Keep going, stay positive and maintain a balanced 
+lifestyle!' , 
+        'assets/motivation.jpg' , // Add relevant image asset here  
+      ); 
+    } else if (totalScore <= 9) { 
+      _showResultDialog ( 
+        'Mild Anxiety' , 
+        'We recommend exploring breathing and yoga tutorials in our app to help 
+manage your anxiety.' , 
+        'assets/yoga.jpg' , // Add relevant image asset here  
+      ); 
+    } else if (totalScore <= 14) { 
+      _showResultDialog ( 
+        'Moderate Anxiety' , 
+        'Consider joining our community groups, explore books and videos from our 
+resources, and try yoga tutorials.' , 
+        'assets/community.jpg' , // Add relevant image asset here  
+      ); 
+    } else { 
+      _showResultDialog ( 
+        'Severe Anxiety' , 
+        'It\'s best to consult a psychologist. Use our app to find one nearby and 
+schedule an appointment.' , 
+        'assets/psychologist.png' , // Add relevant image asset here  
+      ); 
+    } 
+  } 
+ 
+  void _showResultDialog (String result, String message, String imagePath) {  
+    showDialog ( 
+      context: context,  
+      builder: (context) {  
+        return Dialog( 
+          shape: RoundedRectangleBorder ( 
+            borderRadius : BorderRadius .circular (20), 
+          ), 
+          child: Container ( 
+            height: MediaQuery .of(context).size.height * 0.75, // 75% of screen  
+            padding: const EdgeInsets .all(16), 
+            child: Column( 
+              crossAxisAlignment : CrossAxisAlignment .stretch,  
+              children : [ 
+                Text( 
+                  result, 
+                  style: const TextStyle (fontSize : 22, fontWeight : 
+FontWeight .bold), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                Image.asset(imagePath, height : 150), // Display the relevant 
+image 
+                const SizedBox (height: 20), 
+                Text( 
+                  message,  
+                  style: const TextStyle (fontSize : 16), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                ElevatedButton ( 
+                  onPressed : () { 
+                    Navigator .of(context). pop(); 
+                  }, 
+                  style: ElevatedButton .styleFrom ( 
+                    backgroundColor : Colors.teal, 
+                  ), 
+                  child: const Text('OK'), 
+                ), 
+              ], 
+            ), 
+          ), 
+        ); 
+      }, 
+    ); 
+  } 
+} 
+ 
+const _questions = [ 
+  'Feeling nervous, anxious, or on edge' , 
+  'Not being able to stop or control worrying' , 
+  'Worrying too much about different things' , 
+  'Trouble relaxing' , 
+  'Being so restless that it is hard to sit still' , 
+  'Becoming easily annoyed or i rritable' , 
+  'Feeling afraid as if something awful might happen' , 
+]; 
+import 'package:flutter/material.dart' ; 
+ 
+class BipolarTestPage  extends StatefulWidget  { 
+  const BipolarTestPage ({super.key}); 
+ 
+  @override  
+  _BipolarTestPageState  createState () => _BipolarTestPageState (); 
+} 
+ 
+class _BipolarTestPageState  extends State<BipolarTestPage > { 
+  List<int> answers = List.filled(7, 0); // 7 questions  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('Bipolar Test' ), 
+        backgroundColor : Colors.teal, 
+      ), 
+      body: SingleChildScrollView ( 
+        padding: const EdgeInsets .all(16.0), 
+        child: Column( 
+          crossAxisAlignment : CrossAxisAlignment .start, 
+          children : [ 
+            const Text( 
+              'In the past week, have you experienced the following?' , 
+              style: TextStyle (fontSize : 18, fontWeight : FontWeight .bold), 
+            ), 
+            const SizedBox (height: 16), 
+            for (int i = 0; i < _bipolarQuestions.length; i ++) _buildQuestion (i), 
+            const SizedBox (height: 20), 
+            ElevatedButton ( 
+              onPressed : _calculateResult,  
+              style: ElevatedButton .styleFrom (backgroundColor : Colors.teal), 
+              child: const Text('Submit' ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+ 
+  Widget _buildQuestion (int index) {  
+    return Column( 
+      crossAxisAlignment : CrossAxisAlignment .start, 
+      children : [ 
+        Text( 
+          '${index + 1}. ${_bipolarQuestions [index]}', 
+          style: const TextStyle (fontSize : 16), 
+        ), 
+        Column( 
+          children : [ 
+            _buildOption (index, 0, 'Not at all' ), 
+            _buildOption (index, 1, 'Occasionally' ), 
+            _buildOption (index, 2, 'Frequently' ), 
+            _buildOption (index, 3, 'Almost always' ), 
+          ], 
+        ), 
+        const SizedBox (height: 16), 
+      ], 
+    ); 
+  } 
+ 
+  Widget _buildOption (int questionIndex, int value, String text) { 
+    return RadioListTile ( 
+      value: value, 
+      groupValue : answers[questionIndex],  
+      onChanged : (newValue) {  
+        setState (() { 
+          answers[questionIndex] = newValue as int; 
+        }); 
+      }, 
+      title: Text(text, style : const TextStyle (fontSize : 14)), 
+    ); 
+  } 
+ 
+  void _calculateResult () { 
+    int totalScore = answers. reduce((a, b) => a + b); 
+ 
+    if (totalScore <= 5) { 
+      _showResultDialog ( 
+        'Minimal Symptoms of Bipolar' , 
+        'Your responses indicate minimal symptoms. Continue maintaining a 
+balanced and healthy lifestyle.' , 
+        'assets/motivation.jpg' , // Replace with an appropriate image  
+      ); 
+    } else if (totalScore <= 12) { 
+      _showResultDialog ( 
+        'Moderate  Symptoms of Bipolar' , 
+        'Consider practicing mood -stabilizing techniques, such as regular 
+exercise, mindfulness, or discussing your experiences with someone you trust.' , 
+        'assets/yoga.jpg' , // Replace with an appropriate image  
+      ); 
+    } else { 
+      _showResultDialog ( 
+        'High Symptoms of Bipolar' , 
+        'Your score suggests significant symptoms. It’s best to consult a mental 
+health professional for a thorough evaluation and guidance.' , 
+        'assets/psychologist.png' , // Replace  with an appropriate image  
+      ); 
+    } 
+  } 
+ 
+  void _showResultDialog (String result, String message, String imagePath) {  
+    showDialog ( 
+      context: context,  
+      builder: (context) {  
+        return Dialog( 
+          shape: RoundedRectangleBorder ( 
+            borderRadius : BorderRadius .circular (20), 
+          ), 
+          child: Container ( 
+            padding: const EdgeInsets .all(16), 
+            child: Column( 
+              crossAxisAlignment : CrossAxisAlignment .stretch,  
+              children : [ 
+                Text( 
+                  result, 
+                  style: const TextStyle (fontSize : 22, fontWeight : 
+FontWeight .bold), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                Image.asset(imagePath, height : 150), 
+                const SizedBox (height: 20), 
+                Text( 
+                  message,  
+                  style: const TextStyle (fontSize : 16), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                ElevatedButton ( 
+                  onPressed : () { 
+                    Navigator .of(context). pop(); 
+                  }, 
+                  style: ElevatedButton .styleFrom (backgroundColor : Colors.teal), 
+                  child: const Text('OK'), 
+                ), 
+              ], 
+            ), 
+          ), 
+        ); 
+      }, 
+    ); 
+  } 
+} 
+ 
+const _bipolarQuestions = [ 
+  'Had periods where you felt overly happy or “high” compared to usual?' , 
+  'Experienced mood swings from very happy to very sad or irritable?' , 
+  'Had an unusual increase in energy and activity levels?' , 
+  'Found yourself talking more than usual or very fast?' , 
+  'Engaged in risky behavior (e.g., spending sprees, impulsive decision s)?', 
+  'Had trouble sleeping or slept less than usual without feeling tired?' , 
+  'Experienced racing thoughts or difficulty focusing?' , 
+]; 
+ 
+import 'package:flutter/material.dart' ; 
+ 
+class DepressionTestPage  extends StatefulWidget  { 
+  const DepressionTestPage ({super.key}); 
+ 
+  @override  
+  _DepressionTestPageState  createState () => _DepressionTestPageState (); 
+} 
+ 
+class _DepressionTestPageState  extends State<DepressionTestPage > { 
+  List<int> answers = List.filled(9, 0); // Store answers for 9 questions  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('Depression Test (PHQ -9)'), 
+        backgroundColor : Colors.teal, 
+      ), 
+      body: SingleChildScr ollView( 
+        padding: const EdgeInsets .all(16.0), 
+        child: Column( 
+          crossAxisAlignment : CrossAxisAlignment .start, 
+          children : [ 
+            const Text( 
+              'Over the last 2 weeks, how often have you been bothered by the 
+following problems?' , 
+              style: TextStyle (fontSize : 18, fontWeight : FontWeight .bold), 
+            ), 
+            const SizedBox (height: 16), 
+            for (int i = 0; i < _questions.length; i ++) _buildQuestion (i), 
+            const SizedBox (height: 20), 
+            ElevatedButton ( 
+              onPressed : _calculateResult,  
+              style: ElevatedButton .styleFrom (backgroundColor : Colors.teal), 
+              child: const Text('Submit' ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+ 
+  Widget _buildQuestion (int index) {  
+    return Column( 
+      crossAxisAlignment : CrossAxisAlignment .start, 
+      children : [ 
+        Text( 
+          '${index + 1}. ${_questions[index]}', 
+          style: const TextStyle (fontSize : 16), 
+        ), 
+        Column( 
+          children : [ 
+            _buildOption (index, 0, 'Not at all' ), 
+            _buildOption (index, 1, 'Several days' ), 
+            _buildOption (index, 2, 'More than half the days' ), 
+            _buildOption (index, 3, 'Nearly every day' ), 
+          ], 
+        ), 
+        const SizedBox (height: 16), 
+      ], 
+    ); 
+  } 
+ 
+  Widget _buildOption (int questionIndex, int value, String text) { 
+    return RadioListTile ( 
+      value: value, 
+      groupValue : answers[questionIndex],  
+      onChanged : (newValue) {  
+        setState (() { 
+          answers[questionIndex] = newValue as int; 
+        }); 
+      }, 
+      title: Text(text, style : const TextStyle (fontSize : 14)), 
+    ); 
+  } 
+ 
+  void _calculateResult () { 
+    int totalScore = answers. reduce((a, b) => a + b); 
+ 
+    if (totalScore <= 4) { 
+      _showResultDialog ( 
+        'Minimal Depression' , 
+        'Great job! Keep going, stay positive and maintain a  balanced 
+lifestyle!' , 
+        'assets/motivation.jpg' , // Add relevant image asset here  
+      ); 
+    } else if (totalScore <= 9) { 
+      _showResultDialog ( 
+        'Mild Depression' , 
+        'We recommend exploring breathing and yoga tutorials in our app to help 
+manage your anxiety.' , 
+        'assets/yoga.jpg' , // Add relevant image asset here  
+      ); 
+    } else if (totalScore <= 14) { 
+      _showResultDialog ( 
+        'Moderate Depression' , 
+        'Consider joining our community groups, explore books and videos from our 
+resources, and try yoga tutorials.' , 
+        'assets/community.jpg' , // Add relevant image asset here  
+      ); 
+    }else if (totalScore <= 19) { 
+      _showResultDialog ( 
+        'Moderately severe Depression' , 
+        'Consult a psychologist,Consider joining community groups, talk to your 
+near ones and try yoga. ' , 
+        'assets/psychologist.png' , // Add relevant image asset here  
+      ); 
+    }else { 
+      _showResultDialog ( 
+        'Severe Depression' , 
+        'It\'s best to consult a psychologist . Use our app to find one 
+nearby.Contact hotline if you feel too down or want to talk to someone ' , 
+        'assets/psychologist.png' , // Add relevant image asset here  
+      ); 
+    } 
+  } 
+ 
+  void _showResultDialog (String result, String message, String imagePath) {  
+    showDialog ( 
+      context: context,  
+      builder: (context) {  
+        return Dialog( 
+          shape: RoundedRectangleBorder ( 
+            borderRadius : BorderRadius .circular (20), 
+          ), 
+          child: Container ( 
+            height: MediaQuery .of(context).size.height * 0.75, // 75% of screen  
+            padding: const EdgeInsets .all(16), 
+            child: Column( 
+              crossAxisAlignment : CrossAxisAlignment .stretch,  
+              children : [ 
+                Text( 
+                  result, 
+                  style: const TextStyle (fontSize : 22, fontWeight : 
+FontWeight .bold), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                Image.asset(imagePath, height : 150), // Display the relevant 
+image 
+                const SizedBox (height: 20), 
+                Text( 
+                  message,  
+                  style: const TextStyle (fontSize : 16), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                ElevatedButton ( 
+                  onPressed : () { 
+                    Navigator .of(context). pop(); 
+                  }, 
+                  style: ElevatedButton .styleFrom ( 
+                    backgroundColor : Colors.teal, 
+                  ), 
+                  child: const Text('OK'), 
+                ), 
+              ], 
+            ), 
+          ), 
+        ); 
+      }, 
+    ); 
+  } 
+} 
+ 
+const _questions = [ 
+  'Little interest or pleasure in doing things' , 
+  'Feeling down, depressed, or hopeless' , 
+  'Trouble falling or staying asleep, or sleeping too much' , 
+  'Feeling tired or having little energy' , 
+  'Poor appetite or overeating' , 
+  'Feeling bad about yourself — or that you are a failure or have let yourself or 
+your family down' , 
+  'Trouble concentrating on things, such as reading the newspaper or watching 
+television' , 
+  'Moving or speaking so slowly t hat other people could have noticed? Or the 
+opposite — being so fidgety or restless that you have been moving a lot more than 
+usual', 
+  'Thoughts that you would be better off dead, or thoughts of hurting yourself in 
+some way' , 
+]; 
+import 'package:flutter/material.dart' ; 
+ 
+class OCDTestPage  extends StatefulWidget  { 
+  const OCDTestPage ({super.key}); 
+ 
+  @override  
+  _OCDTestPageState  createState () => _OCDTestPageState (); 
+} 
+ 
+class _OCDTestPageState  extends State<OCDTestPage > { 
+  List<int> answers = List.filled(10, 0); // 10 questions  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('OCD Test' ), 
+        backgroundColor : Colors.teal, 
+      ), 
+      body: SingleChildScrollView ( 
+        padding: const EdgeInsets .all(16.0), 
+        child: Column( 
+          crossAxisAlignment : CrossAxisAlignment .start, 
+          children : [ 
+            const Text( 
+              'In the past week, have you experienced any of the following 
+obsessions or compulsions?' , 
+              style: TextStyle (fontSize : 18, fontWeight : FontWeight .bold), 
+            ), 
+            const SizedBox (height: 16), 
+            for (int i = 0; i < _ocdQuestions.length; i ++) _buildQuestion (i), 
+            const SizedBox (height: 20), 
+            ElevatedButton ( 
+              onPressed : _calculateResult,  
+              style: ElevatedButton .styleFrom (backgroundColor : Colors.teal), 
+              child: const Text('Submit' ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+ 
+  Widget _buildQuestion (int index) {  
+    return Column( 
+      crossAxisAlignment : CrossAxisAlignment .start, 
+      children : [ 
+        Text( 
+          '${index + 1}. ${_ocdQuestions[index]}', 
+          style: const TextStyle (fontSize : 16), 
+        ), 
+        Column( 
+          children : [ 
+            _buildOption (index, 0, 'Not at all' ), 
+            _buildOption (index, 1, 'A little bit' ), 
+            _buildOption (index, 2, 'Moderately' ), 
+            _buildOption (index, 3, 'A lot'), 
+            _buildOption (index, 4, 'Extremely' ), 
+          ], 
+        ), 
+        const SizedBox (height: 16), 
+      ], 
+    ); 
+  } 
+ 
+  Widget _buildOption (int questionIndex, int value, String text) { 
+    return RadioListTile ( 
+      value: value, 
+      groupValue : answers[questionIndex],  
+      onChanged : (newValue) {  
+        setState (() { 
+          answers[questionIndex] = newValue as int; 
+        }); 
+      }, 
+      title: Text(text, style : const TextStyle (fontSize : 14)), 
+    ); 
+  } 
+ 
+  void _calculateResult () { 
+    int totalScore = answers. reduce((a, b) => a + b); 
+ 
+    if (totalScore <= 10) { 
+      _showResultDialog ( 
+        'Minimal OCD Symptoms' , 
+        'Your score indicates minimal symptoms. Keep monitoring your mental 
+health.' , 
+        'assets/motivation.jpg' , // Replace with an appropriate image  
+      ); 
+    } else if (totalScore <= 20) { 
+      _showResultDialog ( 
+        'Moderate OCD Symptoms' , 
+        'Consider exploring strategies such as mindfulness, breathing exercises, 
+or seeking support.' , 
+        'assets/yoga.jpg' , // Replace with an appropriate image  
+      ); 
+    } else { 
+      _showResultDialog ( 
+        'High OCD Symptoms' , 
+        'Your score  suggests significant symptoms. It is advisable to consult 
+with a mental health professional for an evaluation.' , 
+        'assets/psychologist.png' , // Replace with an appropriate image  
+      ); 
+    } 
+  } 
+ 
+  void _showResultDialog (String result, String message, String imagePath) {  
+    showDialog ( 
+      context: context,  
+      builder: (context) {  
+        return Dialog( 
+          shape: RoundedRectangleBorder ( 
+            borderRadius : BorderRadius .circular (20), 
+          ), 
+          child: Container ( 
+            padding: const EdgeInsets .all(16), 
+            child: Column( 
+              crossAxisAlignment : CrossAxisAlignment .stretch,  
+              children : [ 
+                Text( 
+                  result, 
+                  style: const TextStyle (fontSize : 22, fontWeight : 
+FontWeight .bold), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                Image.asset(imagePath, height : 150), 
+                const SizedBox (height: 20), 
+                Text( 
+                  message,  
+                  style: const TextStyle (fontSize : 16), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                ElevatedButton ( 
+                  onPressed: () { 
+                    Navigator .of(context). pop(); 
+                  }, 
+                  style: ElevatedButton .styleFrom (backgroundColor : Colors.teal), 
+                  child: const Text('OK'), 
+                ), 
+              ], 
+            ), 
+          ), 
+        ); 
+      }, 
+    ); 
+  } 
+} 
+ 
+const _ocdQuestions = [ 
+  'Do you have frequent, intrusive thoughts or urges to perform certain 
+actions?' , 
+  'Do you find yourself repeatedly washing your hands, or avoiding 
+contamination?' , 
+  'Do you experience excessive checking behaviors (e.g., repeatedly checking 
+locks, stoves, etc.)?' , 
+  'Do you feel that certain actions or behaviors must be done in a specific way 
+or order?' , 
+  'Do you have a persistent fear of harming others, even though y ou would never 
+do so?', 
+  'Do you feel the need to mentally repeat or recheck things to prevent something 
+bad from happening?' , 
+  'Do you find yourself performing rituals that you feel are unnecessary but 
+cannot stop doing?' , 
+  'Do you experience distress or anxiety when you are unable to perform certain 
+rituals?' , 
+  'Do you worry about the potential harm or danger of not performing rituals or 
+compulsions?' , 
+  'Do these symptoms interfere with your daily life, work, or relationships?'  
+]; 
+ 
+import 'package: flutter/material.dart' ; 
+ 
+class PTSDTestPage  extends StatefulWidget  { 
+  const PTSDTestPage ({super.key}); 
+ 
+  @override  
+  _PTSDTestPageState  createState () => _PTSDTestPageState (); 
+} 
+ 
+class _PTSDTestPageState  extends State<PTSDTestPage > { 
+  List<int> answers = List.filled(5, 0); 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('PTSD Test' ), 
+        backgroundColor : Colors.teal, 
+      ), 
+      body: SingleChildScrollView ( 
+        padding: const EdgeInsets .all(16.0), 
+        child: Column( 
+          crossAxisAlignment : CrossAxisAlignment .start, 
+          children : [ 
+            const Text( 
+              'In the past month, have you been bothered by any of the following 
+problems?' , 
+              style: TextStyle (fontSize : 18, fontWeight : FontWeight .bold), 
+            ), 
+            const SizedBox (height: 16), 
+            for (int i = 0; i < _ptsdQuestions.length; i ++) _buildQuestion (i), 
+            const SizedBox (height: 20), 
+            ElevatedButton ( 
+              onPressed : _calculateResult,  
+              style: ElevatedButton .styleFrom (backgroundColor : Colors.teal), 
+              child: const Text('Submit' ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+ 
+  Widget _buildQuestion (int index) {  
+    return Column( 
+      crossAxisAlignment : CrossAxisAlignment .start, 
+      children : [ 
+        Text( 
+          '${index + 1}. ${_ptsdQuestions [index]}', 
+          style: const TextStyle (fontSize : 16), 
+        ), 
+        Column( 
+          children : [ 
+            _buildOption (index, 0, 'Not at all' ), 
+            _buildOption (index, 1, 'Several days' ), 
+            _buildOption (index, 2, 'More than half the days' ), 
+            _buildOption (index, 3, 'Nearly every day' ), 
+          ], 
+        ), 
+        const SizedBox (height: 16), 
+      ], 
+    ); 
+  } 
+ 
+  Widget _buildOption (int questionIndex, int value, String text) { 
+    return RadioListTile ( 
+      value: value, 
+      groupValue : answers[questionIndex],  
+      onChanged : (newValue) {  
+        setState (() { 
+          answers[questionIndex] = newValue as int; 
+        }); 
+      }, 
+      title: Text(text, style : const TextStyle (fontSize : 14)), 
+    ); 
+  } 
+ 
+  void _calculateResult () { 
+    int totalScore = answers. reduce((a, b) => a + b); 
+ 
+    if (totalScore <= 3) { 
+      _showResultDialog ( 
+        'Low PTSD Symptoms' , 
+        'Your score indicates low symptoms of PTSD. Keep managing your mental 
+health and monitor any changes.' , 
+        'assets/motivation.jpg' , // Replace with an appropriate  image 
+      ); 
+    } else if (totalScore <= 9) { 
+      _showResultDialog ( 
+        'Moderate PTSD Symptoms' , 
+        'Consider relaxation techniques and self -care strategies to manage these 
+symptoms. Reach out for help if they persist.' , 
+        'assets/yoga.jpg' , // Replace with an appropriate image  
+      ); 
+    } else { 
+      _showResultDialog ( 
+        'High PTSD Symptoms' , 
+        'It is recommended that you consult a mental health professional for 
+support and guidance on managing PTSD symptoms.' , 
+        'assets/psychologist.png' , // Replace with an appropriate image  
+      ); 
+    } 
+  } 
+ 
+  void _showResultDialog (String result, String message, String imagePath) {  
+    showDialog ( 
+      context: context,  
+      builder: (context) {  
+        return Dialog( 
+          shape: RoundedRectangleBorder ( 
+            borderRadius : BorderRadius .circular (20), 
+          ), 
+          child: Container ( 
+            padding: const EdgeInsets .all(16), 
+            child: Column( 
+              crossAxisAlignment : CrossAxisAlignment .stretch,  
+              children : [ 
+                Text( 
+                  result, 
+                  style: const TextStyle (fontSize: 22, fontWeight : 
+FontWeight .bold), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                Image.asset(imagePath, height : 150), 
+                const SizedBox (height: 20), 
+                Text( 
+                  message,  
+                  style: const TextStyle (fontSize : 16), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                ElevatedButton ( 
+                  onPressed : () { 
+                    Navigator .of(context). pop(); 
+                  }, 
+                  style: ElevatedButton .styleFrom (backgroundColor : Colors.teal), 
+                  child: const Text('OK'), 
+                ), 
+              ], 
+            ), 
+          ), 
+        ); 
+      }, 
+    ); 
+  } 
+} 
+ 
+const _ptsdQuestions = [ 
+  'Have you had nightmares or thought about the event when you did not want to?' , 
+  'Tried hard not to think about it or went out of your way to avoid situations 
+that reminded yo u of it?' , 
+  'Been constantly on guard, watchful, or easily startled?' , 
+  'Felt numb or detached from people, activities, or your surroundings?' , 
+  'Felt guilty or unable to stop blaming yourself or others for the event or any 
+problems the event may have caused?' , 
+]; 
+ 
+import 'package:flutter/material.dart' ; 
+ 
+class StressTestPage  extends StatefulWidget  { 
+  const StressTestPage ({super.key}); 
+ 
+  @override  
+  _StressTestPageState  createState () => _StressTestPageState (); 
+} 
+ 
+class _StressTestPageState  extends State<StressTestPage > { 
+  List<int> answers = List.filled(8, 0); 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('Stress Test' ), 
+        backgroundColor : Colors.teal, 
+      ), 
+      body: SingleChildScrollView ( 
+        padding: const EdgeInsets .all(16.0), 
+        child: Column( 
+          crossAxisAlignment : CrossAxisAlignme nt.start, 
+          children : [ 
+            const Text( 
+              'Over the last month, how often have you been bothered by the 
+following problems?' , 
+              style: TextStyle (fontSize : 18, fontWeight : FontWeight .bold), 
+            ), 
+            const SizedBox (height: 16), 
+            for (int i = 0; i < _stressQuestions.length; i ++) _buildQuestion (i), 
+            const SizedBox (height: 20), 
+            ElevatedButton ( 
+              onPressed : _calculateResult,  
+              style: ElevatedButton .styleFrom (backgroundColor : Colors.teal), 
+              child: const Text('Submit' ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+ 
+  Widget _buildQuestion (int index) {  
+    return Column( 
+      crossAxisAlignment : CrossAxisAlignment .start, 
+      children : [ 
+        Text( 
+          '${index + 1}. ${_stressQuestions [index]}', 
+          style: const TextStyle (fontSize : 16), 
+        ), 
+        Column( 
+          children : [ 
+            _buildOption (index, 0, 'Never'), 
+            _buildOption (index, 1, 'Almost Never' ), 
+            _buildOption (index, 2, 'Sometimes' ), 
+            _buildOption (index, 3, 'Fairly Often' ), 
+            _buildOption (index, 4, 'Very Often' ), 
+          ], 
+        ), 
+        const SizedBox (height: 16), 
+      ], 
+    ); 
+  } 
+ 
+  Widget _buildOption (int questionIndex, int value, String text) { 
+    return RadioListTile ( 
+      value: value, 
+      groupValue : answers[questionIndex],  
+      onChanged : (newValue) {  
+        setState (() { 
+          answers[questionIndex] = newValue as int; 
+        }); 
+      }, 
+      title: Text(text, style : const TextStyle (fontSize : 14)), 
+    ); 
+  } 
+ 
+  void _calculateResult () { 
+    int totalScore = answers. reduce((a, b) => a + b); 
+ 
+    if (totalScore <= 10) { 
+      _showResultDialog ('Low Stress' , 'Keep it up! Maintain a balanced 
+lifestyle.' , 'assets/motivation.jpg' ); 
+    } else if (totalScore <= 20) { 
+      _showResultDialog ('Moderate Stress' , 'Consider relaxation techniques like 
+deep breathing or meditation.' , 'assets/yoga.jpg' ); 
+    } else { 
+      _showResultDialog ('High Stress' , 'Consult a mental health professional for 
+support.' , 'assets/psychologist.png' ); 
+    } 
+  } 
+ 
+  void _showResultDialog (String result, String message, String imagePath) {  
+    showDialog ( 
+      context: context,  
+      builder: (context) {  
+        return Dialog( 
+          shape: RoundedRectangleBorder ( 
+            borderRadius : BorderRadius .circular (20), 
+          ), 
+          child: Container ( 
+            padding: const EdgeInsets .all(16), 
+            child: Column( 
+              crossAxisAlignment : CrossAxisAlignment .stretch,  
+              children : [ 
+                Text( 
+                  result, 
+                  style: const TextStyle (fontSize : 22, fontWeight : 
+FontWeight .bold), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                Image.asset(imagePath, height : 150), 
+                const SizedBox (height: 20), 
+                Text( 
+                  message,  
+                  style: const TextStyle (fontSize : 16), 
+                  textAlign : TextAlign .center,  
+                ), 
+                const SizedBox (height: 20), 
+                ElevatedButton ( 
+                  onPressed : () { 
+                    Navigator .of(context). pop(); 
+                  }, 
+                  style: ElevatedButton .styleFrom (backgroundColor : Colors.teal), 
+                  child: const Text('OK'), 
+                ), 
+              ], 
+            ), 
+          ), 
+        ); 
+      }, 
+    ); 
+  } 
+} 
+ 
+const _stressQuest ions = [ 
+  'Felt that you were unable to control important things in your life?' , 
+  'Felt nervous and stressed?' , 
+  'Felt that things were going your way?' , 
+  'Found it difficult to cope with things?' , 
+  'Felt confident about handling your problems?' , 
+  'Felt that things were going as planned?' , 
+  'Felt angry or irritated easily?' , 
+  'Felt that you were on to import 'package:flutter/material.dart' ; 
+import 'anxiety_test.dart' ; 
+import 'depression_test.dart' ; 
+import 'stress.dart' ; 
+import 'ptsd.dart' ; 
+import 'Bipolar.dart' ; 
+import 'ocd.dart' ; 
+ 
+ 
+class TestSelectionPage  extends StatelessWidget  { 
+  const TestSelectionPage ({super.key}); 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text('Select a Test' ), 
+        backgroundColor : Colors.teal, 
+      ), 
+      body: Padding( 
+        padding: const EdgeInsets .all(16.0), 
+        child: Column( 
+          children : [ 
+            const Text( 
+              'Select a test to assess your mental health:' , 
+              style: TextStyle (fontSize : 18, fontWeight : FontWeight .bold), 
+              textAlign : TextAlign .center,  
+            ), 
+            const SizedBox (height: 20), 
+            Expanded ( 
+              child: GridView .count( 
+                crossAxisCount : 2, // 2 bubbles per row  
+                crossAxisSpacing : 10, 
+                mainAxisSpacing : 10, 
+                children : [ 
+                  _buildTestBubble (context, 'Anxiety Test' , 
+Icons.sentiment_dissatisfied, const AnxietyTestPage ()), 
+                  _buildTestBubble (context, 'Depression Test' , 
+Icons.sentiment_very_dissatisfied, const DepressionTestPage ()), 
+                  _buildTestBubble (context, 'Stress Test' , 
+Icons.sentiment_neu tral, const StressTestPage ()), 
+                  _buildTestBubble (context, 'PTSD Test' , Icons.sentiment_neutral, 
+const PTSDTestPage ()), 
+                  _buildTestBubble (context, 'Bipolar Disorder Test' , 
+Icons.sentiment_satisfied, const BipolarTestPage ()), 
+                  _buildTestBubble (context, 'OCD Test' , 
+Icons.sentiment_very_satisfied, const OCDTestPage ()), 
+                ], 
+              ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+ 
+  // Helper function to create each test bubble  
+  Widget _buildTestBubble (BuildContext  context, String testName, IconData  icon, 
+Widget targetPage) {  
+    return GestureDetector ( 
+      onTap: () { 
+        Navigator .push( 
+          context,  
+          MaterialPageRoute (builder : (context) => targetPage),  
+        ); 
+      }, 
+      child: Container ( 
+        decoration : BoxDecoration ( 
+          shape: BoxShape .circle,  
+          color: Colors.teal.shade300,  
+          boxShadow : const [ 
+            BoxShadow ( 
+              color: Colors.black12,  
+              blurRadius: 6, 
+              spreadRadius : 2, 
+            ), 
+          ], 
+        ), 
+        child: Column( 
+          mainAxisAlignment : MainAxisAlignment .center,  
+          children : [ 
+            Icon(icon, size : 50, color: Colors.white),  
+            const SizedBox (height: 10), 
+            Text( 
+              testName,  
+              style: const TextStyle (color: Colors.white, fontSize : 16), 
+              textAlign : TextAlign .center,  
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+// Landing Pa ges for Other Tests  
+ 
+ 
+ 
+ 
+ 
+import 'package:flutter/material.dart' ; 
+import 'package:firebase_core/firebase_core.dart' ; // Import Firebase Core  
+import 'auth/sign_up.dart' ; 
+ 
+void main() async { 
+  WidgetsFlutterBinding .ensureInitialized (); // Ensures binding is initialized  
+ 
+ 
+  const FirebaseOptions  firebaseOptions = FirebaseOptions ( 
+    apiKey: "AIzaSyCPJY9nOLv2aWzoP4oDbCc0 -KGbuNbGUG8" , 
+    appId: "1:79767323076:android:df5b28bea71203c48ea491" , 
+    messagingSenderId : "79767323076" , 
+    projectId : "authenti -f04f8", 
+  ); 
+  try { 
+    await Firebase .initializeApp (options : firebaseOptions);  
+    print("Firebase initialized successfully" ); 
+  } catch (e) { 
+    print("Firebase initialization failed: $e"); 
+  } 
+  runApp( MentalHealthApp ()); 
+} 
+class MentalHealthApp  extends StatelessWidget  { 
+  @override  
+  Widget build(BuildContext  context) {  
+    return MaterialApp ( 
+      title: 'Mental Health App' , 
+      theme: ThemeData ( 
+        primarySwatch : Colors.blue, 
+      ), 
+      home: SignUp(), 
+    ); 
+  } 
+} 
+ 
+// welcome_page.dart  
+import 'package:yaddy/helpline/helpline.dart' ; 
+import 'package:yaddy/psychologist/psychiatrist.dart' ; 
+import 'resources/rhomepage.dart' ; 
+import 'test/test_selection.dart' ; 
+import 'forum/forum_landing.dart' ; 
+import 'package:flutter/material.dart' ; 
+import 'package:intl/intl.dart' ; 
+import 'package:google_generative_ai/google_generative_ai.dart' ; 
+import 'package:yaddy/bookings/booking.dart' ; 
+ 
+class WelcomePage  extends StatelessWidget  { 
+  const WelcomePage ({super.key}); 
+ 
+  Widget _buildBlock (BuildContext  context, String title, IconData  icon, Widget? 
+nextPage) {  
+    return GestureDetector ( 
+      onTap: () { 
+        if (nextPage != null) { 
+          Navigator .push(context, MaterialPageRoute (builder : (context) => 
+nextPage));  
+        } 
+      }, 
+      child: Container ( 
+        decoration : BoxDecoration ( 
+          color: Colors.blueAccent,  
+          borderRadius : BorderRadius .circular (15), 
+        ), 
+        padding: const EdgeInsets .all(16.0), 
+        child: Column( 
+          mainAxisAlignment : MainAxisAlignme nt.center,  
+          children : [ 
+            Icon(icon, color : Colors.white, size : 48.0), 
+            const SizedBox (height: 10), 
+            Text( 
+              title, 
+              style: const TextStyle (color: Colors.white, fontSize : 16.0), 
+              textAlign : TextAlign .center,  
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text("Welcome Page" ), 
+      ), 
+      body: Column( 
+        mainAxisAlignment : MainAxisAlignment .center,  
+        children : [ 
+          const Text( 
+            'Welcome to the Mental Health App!' , 
+            style: TextStyle (fontSize : 24), 
+          ), 
+          const SizedBox (height: 20), 
+ 
+          Expanded ( 
+            child: GridView .count( 
+              crossAxisCount : 2, 
+              padding: const EdgeInsets .all(16.0), 
+              crossAxisSpacing : 16.0, 
+              mainAxisSpacing : 16.0, 
+              children : [ 
+                _buildBlock (context, 'Take Test' , Icons.edit, const 
+TestSelectionPage ()), 
+                _buildBlock (context, 'Forum', Icons.forum,  ForumLandingPage ()), 
+                _buildBlock (context, 'Helpline' , Icons.call, HelplinePage ()), 
+                _buildBlock (context, 'Resources' , Icons.library_books, 
+ResourceHome ()), 
+                _buildBlock (context, 'Psychiatrist' , Icons.psychology, 
+PsychiatristSearchPage ()), 
+                _buildBlock (context, 'Book Appointment' , 
+Icons.calendar_today, BookAppo intmentPage ()), 
+              ], 
+            ), 
+          ), 
+        ], 
+      ), 
+      floatingActionButton : FloatingActionButton ( 
+        onPressed : () { 
+          // Navigate to ChatScreen when floating action button is pressed  
+          Navigator .push( 
+            context,  
+            MaterialPageRoute (builder : (context) => const ChatScreen ()), 
+          ); 
+        }, 
+        child: const Icon(Icons.chat), 
+      ), 
+    ); 
+  } 
+} 
+ 
+class ChatScreen  extends StatefulWidget  { 
+  const ChatScreen ({super.key}); 
+ 
+  @override  
+  State<ChatScreen > createState () => _ChatScreenState (); 
+} 
+ 
+class _ChatScreenState  extends State<ChatScreen > { 
+  final TextEditingController  _userInput = TextEditingController (); 
+ 
+  static const apiKey = "AIzaSyCVMx0oRVr9KeAcesBHZtTVDZBsBm5 W4is"; 
+ 
+  final model = GenerativeModel (model: 'gemini-pro', apiKey : apiKey);  
+ 
+  final List<Message> _messages = []; 
+  bool isLoading = false; // Loading state  
+ 
+  Future<void> sendMessage () async { 
+    final message = _userInput.text;  
+ 
+    setState (() { 
+      _messages. add(Message(isUser: true, message : message, date : 
+DateTime .now())); 
+      _userInput. clear(); 
+      isLoading = true; // Set loading to true  
+    }); 
+ 
+    final content = [Content.text(message)];  
+    final response = await model.generateContent (content);  
+ 
+    setState (() { 
+      _messages. add(Message(isUser: false, message : response.text ?? "", date: 
+DateTime .now())); 
+      isLoading = false; // Set loading to false once response is received  
+    }); 
+  } 
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: const Text("Chat with AI" ), 
+      ), 
+      body: Container ( 
+        decoration : BoxDecoration ( 
+          image: DecorationImage ( 
+            colorFilter : ColorFilter .mode(Colors.black.withOpacity (0.8), 
+BlendMode .dstATop),  
+            image: const AssetImage ('assets/chat.jpg' ), 
+            fit: BoxFit.cover, 
+          ), 
+        ), 
+        child: Column( 
+          mainAxisAlignment : MainAxisAlignment .end, 
+          children : [ 
+            Expanded ( 
+              child: ListView .builder( 
+                itemCount : _messages.length + (isLoading ? 1 : 0), // Add extra 
+item if loading  
+                itemBuilder : (context, index) {  
+                  if (index == _messages.length && isLoading) {  
+                    return const Padding( 
+                      padding: EdgeInsets .all(8.0), 
+                      child: Center( 
+                        child: CircularProgressIndicator (), // Loading indicator  
+                      ), 
+                    ); 
+                  } 
+                  final message = _messages[index];  
+                  return Messages ( 
+                    isUser: message.isUser,  
+                    message: message.message,  
+                    date: DateFormat ('HH:mm').format(message.date),  
+                  ); 
+                }, 
+              ), 
+            ), 
+            Padding( 
+              padding: const EdgeInsets .all(8.0), 
+              child: Row( 
+                children : [ 
+                  Expanded ( 
+                    flex: 15, 
+                    child: TextFormField ( 
+                      style: const TextStyle (color: Colors.black),  
+                      controller : _userInput,  
+                      decoration : InputDecoration ( 
+                        border: OutlineInputBorder ( 
+                          borderRadius : BorderRadius .circular (15), 
+                        ), 
+                        labelText : 'Enter Your Message' , 
+                      ), 
+                    ), 
+                  ), 
+                  const Spacer(), 
+                  IconButton ( 
+                    padding: const EdgeInsets .all(12), 
+                    iconSize : 30, 
+                    onPressed : isLoading ? null : sendMessage, // Disable button 
+if loading  
+                    icon: const Icon(Icons.send), 
+                  ), 
+                ], 
+              ), 
+            ), 
+          ], 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+class Message { 
+  final bool isUser; 
+  final String message;  
+  final DateTime  date; 
+ 
+  Message({required  this.isUser, required  this.message, required  this.date});  
+} 
+ 
+class Messages  extends StatelessWidget  { 
+  final bool isUser; 
+  final String message;  
+  final String date; 
+ 
+  const Messages ({super.key, required  this.isUser, required  this.message, 
+required this.date});  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Container ( 
+      width: double.infinity,  
+      padding: const EdgeInsets .all(15), 
+      margin: const EdgeInsets .symmetric (vertical : 15).copyWith ( 
+        left: isUser ? 100 : 10, 
+        right: isUser ? 10 : 100, 
+      ), 
+      decoration : BoxDecoration ( 
+        color: isUser ? Colors.blueAccent : Colors.greenAccent,  
+        borderRadius : BorderRadius .only( 
+          topLeft: const Radius.circular (10), 
+          bottomLeft : isUser ? const Radius.circular (10) : Radius.zero, 
+          topRight : const Radius.circular (10), 
+          bottomRight : isUser ? Radius.zero : const Radius.circular (10), 
+        ), 
+      ), 
+      child: Column( 
+        crossAxisAlignment : CrossAxisAlignment .start, 
+        children : [ 
+          Text( 
+            message,  
+            style: TextStyle (fontSize : 16, color: isUser ? Colors.white : 
+Colors.black),  
+          ), 
+          Text( 
+            date, 
+            style: TextStyle (fontSize : 10, color: isUser ? Colors.white : 
+Colors.black),  
+          ), 
+        ], 
+      ), 
+    ); 
+  } 
+} 
+ 
+import 'package:flutter/material.dart' ; 
+ 
+class DoctorHomePage  extends StatelessWidget  { 
+ 
+  const DoctorHomePage ({super.key}) ;  
+ 
+  @override  
+  Widget build(BuildContext  context) {  
+    return Scaffold ( 
+      appBar: AppBar( 
+        title: Text('Doctor Home' ), 
+        backgroundColor : Colors.blueAccent,  
+      ), 
+      body: Center( 
+        child: Text( 
+          'Welcome Dr.Uday' , 
+          style: TextStyle (fontSize : 24, fontWeight : FontWeight .bold), 
+        ), 
+      ), 
+    ); 
+  } 
+} 
+ 
+p of things?' , 
+]; 
+ 
+} 
+ 
+ 
