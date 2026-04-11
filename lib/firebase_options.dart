@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -40,49 +41,49 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAaeaCFXvM6xh2qR8GKii7lIbVVXOeOUQY',
-    appId: '1:736373946179:web:1c282b59987675229161f6',
-    messagingSenderId: '736373946179',
-    projectId: 'ai-powered-mental-health-compa',
-    authDomain: 'ai-powered-mental-health-compa.firebaseapp.com',
-    storageBucket: 'ai-powered-mental-health-compa.firebasestorage.app',
+  static FirebaseOptions web = FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_WEB'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_WEB_WINDOWS'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    authDomain: dotenv.env['FIREBASE_AUTH_DOMAIN'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     measurementId: 'G-10GK42JK0S',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA2RPoy9kJIc1nRyBcwP8GAmQAZVJtmggE',
-    appId: '1:736373946179:android:1c4cf4a027f3d53f9161f6',
-    messagingSenderId: '736373946179',
-    projectId: 'ai-powered-mental-health-compa',
-    storageBucket: 'ai-powered-mental-health-compa.firebasestorage.app',
+  static FirebaseOptions android = FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_ANDROID'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_ANDROID'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyALRhczhOhdab2ZYyi4sa3xqKX3GAScxHs',
-    appId: '1:736373946179:ios:b172ba90e6ce34c19161f6',
-    messagingSenderId: '736373946179',
-    projectId: 'ai-powered-mental-health-compa',
-    storageBucket: 'ai-powered-mental-health-compa.firebasestorage.app',
+  static FirebaseOptions ios = FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_IOS'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_IOS'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     iosBundleId: 'com.example.mentalHealthAi',
   );
 
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyALRhczhOhdab2ZYyi4sa3xqKX3GAScxHs',
-    appId: '1:736373946179:ios:b172ba90e6ce34c19161f6',
-    messagingSenderId: '736373946179',
-    projectId: 'ai-powered-mental-health-compa',
-    storageBucket: 'ai-powered-mental-health-compa.firebasestorage.app',
+  static FirebaseOptions macos = FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_IOS'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_IOS'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     iosBundleId: 'com.example.mentalHealthAi',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAaeaCFXvM6xh2qR8GKii7lIbVVXOeOUQY',
-    appId: '1:736373946179:web:9ff18c3522ab7ea09161f6',
-    messagingSenderId: '736373946179',
-    projectId: 'ai-powered-mental-health-compa',
-    authDomain: 'ai-powered-mental-health-compa.firebaseapp.com',
-    storageBucket: 'ai-powered-mental-health-compa.firebasestorage.app',
+  static FirebaseOptions windows = FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_WEB'] ?? '',
+    appId: dotenv.env['FIREBASE_APP_ID_WEB_WINDOWS'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    authDomain: dotenv.env['FIREBASE_AUTH_DOMAIN'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     measurementId: 'G-L9K0HWZ957',
   );
 }

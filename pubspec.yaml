@@ -48,6 +48,7 @@ dependencies:
   google_fonts: ^8.0.2
   flutter_animate: ^4.5.2
   google_sign_in: ^7.2.0
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +67,7 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
+      - .env
       - assets/doctors.csv
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

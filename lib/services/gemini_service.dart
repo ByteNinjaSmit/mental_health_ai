@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GeminiService {
-  final String apiKey = "AIzaSyAPsyg_Z7bSLa5Z5yeOG_hjntXgIGca-QQ";
+  final String apiKey = dotenv.env['GEMINI_API_KEY'] ?? "";
 
   Future<String> sendMessage(String message) async {
     final url =
