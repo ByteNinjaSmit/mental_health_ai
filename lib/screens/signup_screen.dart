@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'home_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -136,6 +137,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       : const Text("Sign Up", style: TextStyle(fontSize: 18)),
                 ),
               ).animate().fade(delay: 350.ms).slideY(begin: 0.2),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: OutlinedButton.icon(
+                  onPressed: loading ? null : () async {
+                    setState(() => loading = true);
+                    String? res = await _authService.signInWithGoogle();
+                    if (mounted) setState(() => loading = false);
+                    if (res != null && mounted) {
+                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res)));
+                    } else if (res == null && mounted) {
+                       Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomeScreen()), (route) => false);
+                    }
+                  },
+                  icon: Image.network("https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png", height: 24),
+                  label: const Text("Sign Up with Google", style: TextStyle(fontSize: 16, color: Colors.black87)),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    side: BorderSide(color: Colors.grey.shade300),
+                  ),
+                ),
+              ).animate().fade(delay: 400.ms).slideY(begin: 0.2),
               const SizedBox(height: 24),
               Center(
                 child: TextButton(

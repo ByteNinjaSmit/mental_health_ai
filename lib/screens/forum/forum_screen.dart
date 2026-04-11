@@ -12,7 +12,7 @@ class _ForumScreenState extends State<ForumScreen> {
   final TextEditingController controller = TextEditingController();
 
   void post() {
-    _service.addPost(controller.text, "user1");
+    _service.addPost(controller.text);
     controller.clear();
   }
 
