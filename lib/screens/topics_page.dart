@@ -19,12 +19,40 @@ class TopicsPage extends StatelessWidget {
           stream: FirebaseFirestore.instance
               .collection('topics')
               .where('category', isEqualTo: category)
-              .orderBy('timestamp', descending: true)
               .snapshots(),
           builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline_rounded, size: 64, color: Colors.red.shade300),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Could not load topics.\nPlease try again later.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
             if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
             
+            // Sort client-side to avoid needing a Firestore composite index
             final docs = snapshot.data!.docs;
+            docs.sort((a, b) {
+              final aTs = (a.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
+              final bTs = (b.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
+              if (aTs == null && bTs == null) return 0;
+              if (aTs == null) return 1;
+              if (bTs == null) return -1;
+              return bTs.compareTo(aTs); // descending order (newest first)
+            });
+
             if (docs.isEmpty) {
               return Center(
                 child: Column(

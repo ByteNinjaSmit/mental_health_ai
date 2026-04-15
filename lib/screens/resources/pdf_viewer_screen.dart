@@ -3,13 +3,14 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class PdfViewerScreen extends StatelessWidget {
   final String url;
+  final String title;
 
-  PdfViewerScreen({required this.url});
+  const PdfViewerScreen({super.key, required this.url, this.title = 'PDF'});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("PDF")),
+      appBar: AppBar(title: Text(title)),
       body: SfPdfViewer.network(url),
     );
   }

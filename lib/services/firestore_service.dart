@@ -23,19 +23,25 @@ class FirestoreService {
     return _db.collection('posts').orderBy('timestamp', descending: true).snapshots();
   }
 
-  // Book appointment
+  // Book appointment (enhanced — used by BookingService now, kept for backward compat)
   Future<void> bookAppointment(String doctor, String date) async {
     if (currentUserId == null) return;
     await _db.collection('appointments').add({
       'doctor': doctor,
+      'doctorName': doctor,
+      'doctorId': '',
+      'specialization': '',
       'date': date,
+      'timeSlot': '',
       'userId': currentUserId,
-      'status': 'pending',
+      'status': 'booked',
+      'createdAt': Timestamp.now(),
+      'updatedAt': Timestamp.now(),
       'timestamp': Timestamp.now(),
     });
   }
 
-  // Get appointments stream
+  // Get appointments stream (for current user)
   Stream<QuerySnapshot> getAppointments() {
     return _db
         .collection('appointments')
@@ -43,9 +49,12 @@ class FirestoreService {
         .snapshots();
   }
 
-  // Cancel appointment
+  // Cancel appointment (now soft-delete: updates status instead of hard delete)
   Future<void> cancelAppointment(String docId) async {
-    await _db.collection('appointments').doc(docId).delete();
+    await _db.collection('appointments').doc(docId).update({
+      'status': 'cancelled',
+      'updatedAt': Timestamp.now(),
+    });
   }
 
   // Log emergency/therapy call
