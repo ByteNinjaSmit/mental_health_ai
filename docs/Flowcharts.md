@@ -10,13 +10,13 @@ This diagram illustrates the separation of concerns and the data flow between th
 
 ```mermaid
 graph TD
-    subgraph Frontend "Flutter Application (Client)"
+    subgraph Frontend [Flutter Application Client]
         UI[UI Components / Screens]
         State[State Management - Provider]
         UI <-->|Listens / Triggers| State
     end
 
-    subgraph Business Logic "Services Layer"
+    subgraph BusinessLogic [Services Layer]
         AuthSvc[Authentication Service]
         DbSvc[Database Service]
         AISvc[Gemini AI Service]
@@ -25,14 +25,14 @@ graph TD
         State <-->|Prompt Generation| AISvc
     end
 
-    subgraph Backend "Firebase Ecosystem"
+    subgraph Backend [Firebase Ecosystem]
         FirebaseAuth[Firebase Authentication]
         Firestore[Cloud Firestore]
         AuthSvc <-->|Auth Tokens| FirebaseAuth
         DbSvc <-->|Read / Write / Snapshots| Firestore
     end
 
-    subgraph External APIs "AI & External Integration"
+    subgraph ExternalAPIs [AI & External Integration]
         Gemini[Google Gemini 2.5 Flash API]
         AISvc <-->|REST HTTP Request / Response| Gemini
     end
@@ -104,24 +104,24 @@ This state diagram maps the lifecycle of a medical appointment request from the 
 
 ```mermaid
 stateDiagram-v2
-    [*] --> ViewingDirectory: User Opens App
-    ViewingDirectory --> DoctorProfile: Selects Doctor
-    DoctorProfile --> SlotSelection: Clicks Book Appointment
-    SlotSelection --> BookingConfirmation: Selects Valid Date & Time
-    BookingConfirmation --> PendingApproval: Writes to Firestore
-    PendingApproval --> DoctorDashboard: Real-time Snapshot Sync
+    [*] --> ViewingDirectory : User Opens App
+    ViewingDirectory --> DoctorProfile : Selects Doctor
+    DoctorProfile --> SlotSelection : Clicks Book Appointment
+    SlotSelection --> BookingConfirmation : Selects Valid Date & Time
+    BookingConfirmation --> PendingApproval : Writes to Firestore
+    PendingApproval --> DoctorDashboard : Real-time Snapshot Sync
     
     state DoctorDashboard {
-        Reviewing[Doctor Reviews Request]
+        Reviewing : Doctor Reviews Request
     }
     
-    Reviewing --> AppointmentApproved: Doctor Clicks Approve
-    Reviewing --> AppointmentDeclined: Doctor Clicks Decline
+    Reviewing --> AppointmentApproved : Doctor Clicks Approve
+    Reviewing --> AppointmentDeclined : Doctor Clicks Decline
     
-    AppointmentApproved --> UserDashboard: Status Updated to 'Booked'
-    AppointmentDeclined --> UserDashboard: Status Updated to 'Cancelled'
+    AppointmentApproved --> UserDashboard : Status Updated to 'Booked'
+    AppointmentDeclined --> UserDashboard : Status Updated to 'Cancelled'
     
-    UserDashboard --> [*]: User Views Updated Status
+    UserDashboard --> [*] : User Views Updated Status
 ```
 
 ---
@@ -175,10 +175,10 @@ graph TD
     G -- No --> I[Calculate Final Score]
     I --> J{Evaluate Severity Thresholds}
     
-    J -- Score: 0-4 --> K[Result: Minimal]
-    J -- Score: 5-9 --> L[Result: Mild]
-    J -- Score: 10-14 --> M[Result: Moderate]
-    J -- Score: 15-27 --> N[Result: Severe]
+    J -- "Score: 0-4" --> K[Result: Minimal]
+    J -- "Score: 5-9" --> L[Result: Mild]
+    J -- "Score: 10-14" --> M[Result: Moderate]
+    J -- "Score: 15-27" --> N[Result: Severe]
     
     K --> O[Store Result in Firestore]
     L --> O
