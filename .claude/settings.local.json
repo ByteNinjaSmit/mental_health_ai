@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell($kt = \"C:\\\\Program Files\\\\Java\\\\jdk-17\\\\bin\\\\keytool.exe\"; Write-Host \"=== DEBUG SHA ===\" -ForegroundColor Cyan; & $kt -list -v -keystore \"$env:USERPROFILE\\\\.android\\\\debug.keystore\" -alias androiddebugkey -storepass android -keypass android 2>&1 | Select-String \"SHA1:|SHA-1:|SHA256:|SHA-256:|MD5:\"; Write-Host \"\"; Write-Host \"=== RELEASE SHA ===\" -ForegroundColor Cyan; & $kt -list -v -keystore \"D:\\\\Twistark\\\\Mental Health\\\\mental_health_ai\\\\android\\\\upload-keystore.jks\" -alias upload -storepass password123 -keypass password123 2>&1 | Select-String \"SHA1:|SHA-1:|SHA256:|SHA-256:|MD5:\")"
     ]
   }
 }
